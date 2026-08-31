@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Landline Properties | Buy & Rent Property in Gurgaon & Noida</title>
+    <meta name="description"
+        content="Explore premium homes, new projects, plots and investment opportunities across Gurgaon, Noida, Greater Noida and Delhi NCR with local real-estate guidance.">
+    <link rel="canonical" href="https://landlineproperties.com/">
+    <script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"Landline Properties","description":"Real estate marketplace and broker connection platform serving Delhi NCR."},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What types of properties can I find?","acceptedAnswer":{"@type":"Answer","text":"You can enquire about apartments, villas, plots and commercial property requirements."}},{"@type":"Question","name":"Which locations does Landline Properties cover?","acceptedAnswer":{"@type":"Answer","text":"Landline Properties focuses on Gurgaon, Noida, Greater Noida and Delhi NCR."}},{"@type":"Question","name":"Can I list my property?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the List Your Property page to submit your details for assistance."}}]}]}
+</script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f7f8fa;
+            color: #18202a;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* HEADER */
+        header {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar {
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .logo span {
+            color: #c89b3c;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
+        .header-logo img {
+            display: block;
+            height: 64px;
+            width: auto;
+            max-width: 150px;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nav-links a:hover {
+            color: #c89b3c;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 7px;
+            border: 1px solid #18202a;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-dark {
+            background: #18202a;
+            color: #fff;
+        }
+
+        .btn-gold {
+            background: #c89b3c;
+            color: #fff;
+            border-color: #c89b3c;
+        }
+
+        /* LOGO MARQUEE */
+        .logo-marquee {
+            width: 100%;
+            overflow: hidden;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 18px 0;
+        }
+
+        .logo-marquee-heading {
+            color: #18202a;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: .8px;
+            text-align: center;
+            text-transform: uppercase;
+            margin: 0 0 8px;
+        }
+
+        .logo-marquee-track {
+            display: flex;
+            width: max-content;
+            animation: logo-scroll 32s linear infinite;
+            will-change: transform;
+        }
+
+        .logo-marquee-group {
+            display: flex;
+            flex-shrink: 0;
+        }
+
+        .logo-marquee-item {
+            width: 190px;
+            height: 74px;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-marquee-item img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        @keyframes logo-scroll {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            background: #050505;
+        }
+
+        /* Keep the complete option list above the next section while a search menu is open. */
+        .hero:has(.hover-select.is-open) {
+            overflow: visible;
+            z-index: 3;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            z-index: -2;
+            inset: -5%;
+            background: url("image/home-hero-luxury-evening-v2.png") center/cover no-repeat;
+            transform: scale(1.08);
+            will-change: transform;
+            animation: hero-architectural-float 18s cubic-bezier(.45, .05, .55, .95) infinite alternate;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            inset: 0;
+            background:
+                radial-gradient(circle at 77% 38%, rgba(218, 169, 75, .24), transparent 29%),
+                linear-gradient(102deg, rgba(0, 0, 0, .94) 0%, rgba(4, 4, 4, .74) 43%, rgba(0, 0, 0, .15) 100%);
+            pointer-events: none;
+        }
+
+        @keyframes hero-architectural-float {
+            0% {
+                transform: scale(1.08) translate3d(-1.4%, 0, 0);
+            }
+
+            100% {
+                transform: scale(1.17) translate3d(1.2%, -1%, 0);
+            }
+        }
+
+        .hero>.container {
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero::before {
+                animation: none;
+            }
+        }
+
+        .hero-content {
+            color: #fff;
+            max-width: 750px;
+        }
+
+        .hero-content .tag {
+            display: inline-block;
+            background: rgba(200, 155, 60, .95);
+            padding: 7px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: 58px;
+            line-height: 1.08;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            max-width: 620px;
+            color: #eee;
+            margin-bottom: 35px;
+        }
+
+        /* SEARCH */
+        .search-box {
+            background: #fff;
+            width: min(1120px, 90vw);
+            max-width: none;
+            padding: 14px;
+            border-radius: 18px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(210px, 246px);
+            align-items: center;
+            gap: 0;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, .28);
+            position: relative;
+            z-index: 20;
+        }
+
+        .search-item {
+            min-width: 0;
+            min-height: 88px;
+            padding: 14px 22px;
+            border-right: 1px solid #e0e0e0;
+            transition: background-color .2s ease, box-shadow .2s ease;
+        }
+
+        .search-item:hover,
+        .search-item:focus-within {
+            background: #fcfaf6;
+            box-shadow: inset 0 -2px #c89b3c;
+        }
+
+        .search-item label {
+            display: block;
+            font-size: 12px;
+            color: #747474;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .1px;
+        }
+
+        .search-item select {
+            width: 100%;
+            border: 0;
+            outline: 0;
+            font-size: 14px;
+            margin-top: 5px;
+            background: #fff;
+            transition: color 0.25s ease-in;
+        }
+
+        .search-item:hover select,
+        .search-item:focus-within select {
+            color: #c89b3c;
+        }
+
+        .search-item .native-select {
+            display: none;
+        }
+
+        .hover-select {
+            position: relative;
+            margin-top: 9px;
+        }
+
+        .hover-select.is-open {
+            z-index: 100;
+        }
+
+        .hover-select-trigger {
+            width: 100%;
+            padding: 0 24px 0 0;
+            border: 0;
+            background: transparent;
+            color: #1e1e1e;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .hover-select::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: 3px;
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: translateY(-70%) rotate(45deg);
+            pointer-events: none;
+            transition: transform 180ms ease-out;
+        }
+
+        .hover-select-options {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: -15px;
+            right: -15px;
+            z-index: 101;
+            margin: 0;
+            padding: 7px;
+            list-style: none;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-4px);
+            pointer-events: none;
+            transition: opacity 180ms ease-out, transform 180ms ease-out, visibility 0s linear 180ms;
+        }
+
+        .hover-select-options::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            right: 0;
+            left: 0;
+            height: 10px;
+        }
+
+        .hover-select.is-open .hover-select-options {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+            transition-delay: 0s;
+        }
+
+        .hover-select.is-open::after {
+            transform: translateY(-30%) rotate(225deg);
+        }
+
+        .hover-select-option {
+            display: block;
+            width: 100%;
+            padding: 9px 10px;
+            border: 0;
+            border-radius: 5px;
+            background: transparent;
+            color: #222;
+            font: inherit;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 180ms ease-out, color 180ms ease-out;
+        }
+
+        .hover-select-option:hover,
+        .hover-select-option:focus-visible {
+            background: #f7f1e5;
+            color: #c89b3c;
+            outline: 0;
+        }
+
+        .budget-custom-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            left: -15px;
+            right: -15px;
+            z-index: 102;
+            padding: 15px;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, .2);
+        }
+
+        .hover-select.is-custom .budget-custom-panel {
+            display: grid;
+            gap: 8px;
+        }
+
+        .budget-panel-title {
+            color: #c89b3c;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .budget-custom-panel label {
+            font-size: 11px;
+            color: #747474;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .budget-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            color: #c89b3c;
+            font-weight: 800;
+        }
+
+        .budget-input-wrap input,
+        .budget-custom-panel select {
+            width: 100%;
+            min-width: 0;
+            padding: 9px 0;
+            border: 0;
+            outline: 0;
+            background: #fff;
+            font: inherit;
+            font-size: 14px;
+        }
+
+        .budget-custom-panel select {
+            padding: 9px 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+
+        .budget-apply {
+            padding: 10px;
+            border: 0;
+            border-radius: 6px;
+            background: #c89b3c;
+            color: #fff;
+            font: 700 13px Arial, sans-serif;
+            cursor: pointer;
+        }
+
+        .budget-apply:hover,
+        .budget-apply:focus-visible {
+            background: #b8892c;
+            outline: 0;
+        }
+
+        .search-btn {
+            background: #c89b3c;
+            color: #fff;
+            border: 0;
+            min-height: 88px;
+            margin-left: 14px;
+            padding: 18px 25px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease;
+        }
+
+        .search-btn:hover,
+        .search-btn:focus-visible {
+            background: #b8892c;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(161, 111, 15, .28);
+            outline: 0;
+        }
+
+        .hero-expert-cta {
+            display: inline-block;
+            margin-top: 18px;
+        }
+
+        /* SECTION */
+        section {
+            padding: 85px 0;
+        }
+
+        .section-head {
+            text-align: center;
+            margin-bottom: 45px;
+        }
+
+        .section-head span {
+            color: #c89b3c;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .section-head h2 {
+            font-size: 38px;
+            margin-top: 8px;
+        }
+
+        .section-head p {
+            color: #777;
+            max-width: 650px;
+            margin: 10px auto;
+        }
+
+        /* PROPERTY CARDS */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #eee;
+            transition: .3s;
+        }
+
+        .card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, .08);
+        }
+
+        .card-img {
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: .5s;
+        }
+
+        .card:hover img {
+            transform: scale(1.05);
+        }
+
+        .badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #c89b3c;
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .card-body {
+            padding: 22px;
+        }
+
+        .card-body h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .location {
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .details {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 13px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 15px 0;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-actions .btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .seo-content {
+            background: #fff;
+        }
+
+        .seo-content .content-grid {
+            align-items: center;
+        }
+
+        .faq-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .faq-item {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 18px 20px;
+        }
+
+        .faq-item h3 {
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .faq-item p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* LOCATIONS */
+        .location-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .location-box {
+            height: 170px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            color: #fff;
+            display: flex;
+            align-items: end;
+            padding: 20px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .location-box::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, .8));
+        }
+
+        .location-box h3 {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* BROKER */
+        .broker {
+            text-align: center;
+            padding: 28px;
+        }
+
+        .broker img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+
+        .rating {
+            color: #c89b3c;
+            margin: 7px 0;
+        }
+
+        /* WHY LANDLINE */
+        .why {
+            background: #18202a;
+            color: #fff;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+        }
+
+        .feature {
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 10px;
+        }
+
+        .feature-icon {
+            font-size: 30px;
+            margin-bottom: 15px;
+        }
+
+        .feature h3 {
+            margin-bottom: 8px;
+        }
+
+        .feature p {
+            color: #bfc3c8;
+            font-size: 14px;
+        }
+
+        /* SELL CTA */
+        .sell {
+            position: relative;
+            min-height: 520px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            isolation: isolate;
+            color: #fff;
+            background: #050505;
+        }
+
+        /* Animated Background Image */
+        .sell::before {
+            content: "";
+            position: absolute;
+            inset: -8%;
+            z-index: -2;
+
+            background-image: url("https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1800&q=85");
+            background-size: cover;
+            background-position: center;
+
+            animation: sellImageAnimation 16s ease-in-out infinite alternate;
+        }
+
+        /* Dark Overlay */
+        .sell::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+
+            background: linear-gradient(90deg,
+                    rgba(0, 0, 0, .88) 0%,
+                    rgba(0, 0, 0, .60) 45%,
+                    rgba(0, 0, 0, .20) 100%);
+        }
+
+        /* Image Animation */
+        @keyframes sellImageAnimation {
+
+            0% {
+                transform: scale(1.05) translateX(-1%);
+            }
+
+            50% {
+                transform: scale(1.10) translateX(0%);
+            }
+
+            100% {
+                transform: scale(1.16) translateX(1%);
+            }
+        }
+
+        .sell-content {
+            position: relative;
+            z-index: 2;
+            max-width: 650px;
+        }
+
+        .sell-content {
+            max-width: 650px;
+        }
+
+        .sell h2 {
+            font-size: 45px;
+            margin-bottom: 15px;
+        }
+
+        .sell p {
+            color: #eee;
+            margin-bottom: 25px;
+        }
+
+        /* FORM */
+        .contact-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .contact-info h2 {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .contact-info p {
+            color: #777;
+        }
+
+        form {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 110px;
+            resize: none;
+        }
+
+        form button {
+            width: 100%;
+            border: 0;
+        }
+
+        /* FOOTER */
+        footer {
+            background: #10151b;
+            color: #fff;
+            padding: 55px 0 20px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+        }
+
+        .footer-col h3 {
+            margin-bottom: 15px;
+        }
+
+        .footer-col p,
+        .footer-col a {
+            color: #aeb4bb;
+            font-size: 14px;
+        }
+
+        .footer-col a {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .copyright {
+            border-top: 1px solid #292f35;
+            margin-top: 40px;
+            padding-top: 20px;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+
+        /* MOBILE */
+        @media(max-width:900px) {
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 42px;
+            }
+
+            .search-box {
+                width: 100%;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                padding: 10px;
+            }
+
+            .search-item {
+                min-height: 76px;
+                padding: 12px 18px;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .search-item:nth-child(even) {
+                border-right: 0;
+            }
+
+            .search-btn {
+                grid-column: 1 / -1;
+                min-height: 58px;
+                margin: 10px 0 0;
+            }
+
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .location-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .features {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .contact-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media(max-width:600px) {
+
+            .logo-marquee {
+                padding: 13px 0;
+            }
+
+            .logo-marquee-item {
+                width: 145px;
+                height: 60px;
+                padding: 8px 16px;
+            }
+
+            .header-logo img {
+                height: 58px;
+            }
+
+            .nav-buttons .btn:first-child {
+                display: none;
+            }
+
+            .hero {
+                min-height: 650px;
+            }
+
+            .hero::before {
+                inset: -8%;
+                background-position: 64% center;
+                animation-duration: 15s;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .search-box {
+                grid-template-columns: 1fr;
+                border-radius: 14px;
+            }
+
+            .search-item,
+            .search-item:nth-child(2) {
+                border-right: 0;
+            }
+
+            .search-item {
+                min-height: 72px;
+                padding: 12px 14px;
+            }
+
+            .grid,
+            .location-grid,
+            .features,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-head h2 {
+                font-size: 30px;
+            }
+
+            .sell h2 {
+                font-size: 32px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="mobile-nav.css">
+    <link rel="stylesheet" href="professional-footer.css">
+    <link rel="stylesheet" href="logo-fix.css">
+    <link rel="stylesheet" href="complete-page.css">
+    <script src="site.js" defer></script>
+    <script src="js/landline-api.js" defer></script>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="container navbar">
+
+            <a href="index.html" class="header-logo" aria-label="Landline Properties home">
+                <img src="image/Landline.png" alt="LANDLINE PROPERTIES">
+            </a>
+
+            <ul class="nav-links"><li><a class="active" aria-current="page" href="index.html">Home</a></li><li><a href="featured-properties.html">Buy</a></li><li><a href="rent.html">Rent</a></li><li><a href="investment.html">Investment</a></li><li><a href="new-projects.html">New Projects</a></li><li><a href="gallery-profile.html">Gallery</a></li><li><a href="locations.html">Locations</a></li><li><a href="about.html">About Us</a></li></ul>
+
+            <div class="nav-buttons">
+                <a href="contact.html" class="btn">Contact</a>
+                <a href="list-property.html" class="btn btn-dark">List Property</a>
+            </div>
+
+        </div>
+    </header>
+
+
+    <!-- HERO -->
+    <section class="hero" id="home">
+        <div class="container">
+
+            <div class="hero-content">
+
+                <span class="tag">TRUSTED REAL ESTATE PLATFORM FOR DELHI NCR</span>
+
+                <h1>Find the Right Property. With the Right Local Expert.</h1>
+
+                <p>
+                    Explore premium homes, new projects, plots and investment opportunities across Gurgaon, Noida,
+                    Greater Noida and Delhi NCR with guidance from local real-estate professionals.
+                </p>
+                <div class="search-box">
+
+                    <div class="search-item">
+                        <label>Looking For</label>
+                        <select id="property-purpose">
+                            <option>Buy Property</option>
+                            <option>Investment</option>
+                            <option>Self Use</option>
+                            <option>Holiday Home</option>
+                            <option>Rental</option>
+                        </select>
+                    </div>
+
+                    <div class="search-item">
+                        <label>Location</label>
+                        <select id="property-location">
+                            <option>Gurgaon</option>
+                            <option>Noida</option>
+                            <option>Greater Noida</option>
+                            <option>Delhi NCR</option>
+                            <option>Uttarakhand</option>
+                        </select>
+                    </div>
+
+                    <div class="search-item">
+                        <label>Property Type</label>
+                        <select id="property-type">
+                            <option>Apartment</option>
+                            <option>Villa</option>
+                            <option>Plot</option>
+                            <option>Commercial</option>
+                        </select>
+                    </div>
+
+                    <div class="search-item">
+                        <label>Budget</label>
+                        <select id="property-budget">
+                            <option>Any Budget</option>
+                            <option>Under ₹2.4 Cr</option>
+                            <option>₹2.4 Cr - ₹5 Cr</option>
+                            <option>₹5 Cr - ₹10 Cr</option>
+                            <option>₹10 Cr+</option>
+                        </select>
+                    </div>
+
+                    <button class="search-btn" onclick="searchProperty()">Search Properties</button>
+                </div>
+            </div>
+
+            <a href="contact.html" class="btn btn-gold hero-expert-cta">Get Expert Assistance</a>
+
+        </div>
+        </div>
+    </section>
+
+    <!-- LOGO MARQUEE -->
+    <section class="logo-marquee" aria-label="Our property network">
+        <h2 class="logo-marquee-heading">Trusted Real Estate Partners</h2>
+        <div class="logo-marquee-track">
+            <div class="logo-marquee-group">
+                <div class="logo-marquee-item"><img src="image/cropped-Express_Builder-removebg-preview.png"
+                        alt="Partner logo"></div>
+                <div class="logo-marquee-item"><img src="image/logo (1).png" alt="Partner logo"></div>
+                <div class="logo-marquee-item"><img src="image/logo (1).webp" alt="Partner logo"></div>
+                <div class="logo-marquee-item"><img src="image/logo (2).webp" alt="Partner logo"></div>
+                <div class="logo-marquee-item"><img src="image/logo-animation-3.png" alt="Max Estates logo"></div>
+                <div class="logo-marquee-item"><img src="image/Untitled-7_page-0001-1-1-300x300.png.webp"
+                        alt="Partner logo"></div>
+            </div>
+            <div class="logo-marquee-group" aria-hidden="true">
+                <div class="logo-marquee-item"><img src="image/cropped-Express_Builder-removebg-preview.png" alt="">
+                </div>
+                <div class="logo-marquee-item"><img src="image/logo (1).png" alt=""></div>
+                <div class="logo-marquee-item"><img src="image/logo (1).webp" alt=""></div>
+                <div class="logo-marquee-item"><img src="image/logo (2).webp" alt=""></div>
+                <div class="logo-marquee-item"><img src="image/logo-animation-3.png" alt=""></div>
+                <div class="logo-marquee-item"><img src="image/Untitled-7_page-0001-1-1-300x300.png.webp" alt=""></div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- PROPERTIES -->
+    <section id="properties">
+
+        <div class="container">
+
+            <div class="section-head">
+                <span>PREMIUM PROPERTY COLLECTION</span>
+                <h2>Find a Place Worth Investing In</h2>
+                <p>Discover premium plots, homes, and investment opportunities in prime locations — selected for
+                    quality, location, and long-term value.</p>
+            </div>
+
+            <div class="grid" id="home-property-grid">
+
+                <!-- CARD 1 -->
+                <div class="card">
+
+                    <div class="card-img">
+                        <img loading="lazy" alt="Luxury three bedroom apartment in Gurgaon"
+                            src="https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?auto=format&fit=crop&w=900&q=85">
+                        <span class="badge">FEATURED</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <h3>Luxury 3 BHK Apartment</h3>
+
+                        <div class="location">📍 Golf Course Road, Gurgaon</div>
+
+                        <div class="details">
+                            <span>🛏 3 BHK</span>
+                            <span>📐 1,850 Sq.Ft.</span>
+                        </div>
+
+                        <div class="price">₹2.50 Cr</div>
+
+                        <div class="card-actions">
+                            <a href="property-details.html" class="btn">View Property</a>
+                            <a href="#contact" class="btn btn-dark">Enquire</a>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- CARD 2 -->
+                <div class="card">
+
+                    <div class="card-img">
+                        <img loading="lazy" alt="Premium four bedroom residence in Noida"
+                            src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=85">
+                        <span class="badge">FEATURED</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <h3>Premium 4 BHK Residence</h3>
+
+                        <div class="location">📍 Sector 150, Noida</div>
+
+                        <div class="details">
+                            <span>🛏 4 BHK</span>
+                            <span>📐 2,450 Sq.Ft.</span>
+                        </div>
+
+                        <div class="price">₹3.20 Cr</div>
+
+                        <div class="card-actions">
+                            <a href="property-details.html" class="btn">View Property</a>
+                            <a href="#contact" class="btn btn-dark">Enquire</a>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- CARD 3 -->
+                <div class="card">
+
+                    <div class="card-img">
+                        <img loading="lazy" alt="Modern luxury villa in Gurgaon"
+                            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=85">
+                        <span class="badge">NEW</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <h3>Modern Luxury Villa</h3>
+
+                        <div class="location">📍 Sector 79, Gurgaon</div>
+
+                        <div class="details">
+                            <span>🛏 4 BHK</span>
+                            <span>📐 3,200 Sq.Ft.</span>
+                        </div>
+
+                        <div class="price">₹5 Cr</div>
+
+                        <div class="card-actions">
+                            <a href="property-details.html" class="btn">View Property</a>
+                            <a href="#contact" class="btn btn-dark">Enquire</a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- NEW PROJECTS -->
+    <section id="projects" style="background:#fff;">
+
+        <div class="container">
+
+            <div class="section-head">
+                <span>NEW & UPCOMING</span>
+                <h2>Discover What’s New in Real Estate</h2>
+                <p>Explore newly launched and upcoming developments in promising locations, offering modern spaces,
+                    quality infrastructure, and strong future potential.</p>
+            </div>
+
+            <div class="grid">
+
+                <div class="card">
+                    <div class="card-img">
+                        <img loading="lazy" alt="Premium high-rise residential project in Gurgaon"
+                            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85">
+                        <span class="badge">NEW LAUNCH</span>
+                    </div>
+
+                    <div class="card-body">
+                        <h3>Premium Heights</h3>
+                        <div class="location">📍 Sector 53, Gurgaon</div>
+                        <div class="details">
+                            <span>3 & 4 BHK</span>
+                            <span>🏢 High Rise</span>
+                        </div>
+                        <div class="price">Starting ₹ 86 lakhs</div>
+                        <a href="#contact" class="btn btn-dark" style="display:block;text-align:center;">Explore
+                            Project</a>
+                    </div>
+                </div>
+
+
+                <div class="card">
+                    <div class="card-img">
+                        <img loading="lazy" alt="Green residential project in Noida"
+                            src="https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=900&q=85">
+                        <span class="badge">UPCOMING</span>
+                    </div>
+
+                    <div class="card-body">
+                        <h3>Urban Green Residences</h3>
+                        <div class="location">📍 Sector 150, Noida</div>
+                        <div class="details">
+                            <span>3 & 4 BHK</span>
+                            <span>🌳 Green Living</span>
+                        </div>
+                        <div class="price">Starting ₹5 Cr*</div>
+                        <a href="#contact" class="btn btn-dark" style="display:block;text-align:center;">Explore
+                            Project</a>
+                    </div>
+                </div>
+
+
+                <div class="card">
+                    <div class="card-img">
+                        <img loading="lazy" alt="Premium gated community in Greater Noida"
+                            src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=900&q=85">
+                        <span class="badge">PREMIUM</span>
+                    </div>
+
+                    <div class="card-body">
+                        <h3>Elite Garden Residences</h3>
+                        <div class="location">📍 Greater Noida West</div>
+                        <div class="details">
+                            <span>3 & 4 BHK</span>
+                            <span>🏊 Premium Amenities</span>
+                        </div>
+                        <div class="price">Starting ₹8 Cr*</div>
+                        <a href="#contact" class="btn btn-dark" style="display:block;text-align:center;">Explore
+                            Project</a>
+                    </div>
+                </div>
+
+            </div>
+
+    </section>
+
+
+    <!-- LOCATIONS -->
+    <section id="locations">
+
+        <div class="container">
+
+            <div class="section-head">
+                <span>PRIME LOCATIONS</span>
+                <h2>Explore Properties in High-Potential Locations</h2><br>
+                <p>Discover properties in carefully selected locations known for connectivity, development, lifestyle,
+                    and future growth.</p>
+            </div>
+
+            <div class="location-grid">
+
+                <div class="location-box"
+                    style="background-image:url('https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=700&q=80');">
+                    <h3>Gurgaon</h3>
+
+                </div>
+                <p>Luxury Living & High-Growth Opportunities
+                    Premium residences, modern communities and commercial spaces in prime Gurgaon locations.</p>
+
+                <div class="location-box"
+                    style="background-image:url('https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=700&q=80');">
+                    <h3>Noida</h3>
+
+                </div>
+                <p>Modern Communities & Strong Connectivity
+                    Well-planned residential developments and investment opportunities across Noida.</p>
+                <div class="location-box"
+                    style="background-image:url('https://images.unsplash.com/photo-1600566753051-3c3c7e7d0c7b?auto=format&fit=crop&w=700&q=80');">
+                    <h3>Greater Noida</h3>
+
+                </div>
+                <p>Emerging Market with Future Potential
+                    Spacious homes, new projects and investment opportunities in a rapidly developing market.</p>
+                <div class="location-box"
+                    style="background-image:url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=700&q=80');">
+                    <h3>Delhi</h3>
+
+                </div>
+                <p>Prime Residential & Commercial Opportunities
+                    Explore established locations, diverse properties and strategic investment opportunities.</p>
+
+
+            </div>
+    </section>
+
+
+    <!-- BROKERS -->
+    <section id="brokers" style="background:#fff;">
+
+        <div class="container">
+
+            <div class="section-head">
+                <span>LOCAL PROPERTY PROFESSIONALS</span>
+                <h2>Speak With a Specialist Who Knows Your Market</h2>
+                <p>Connect with local professionals for on-ground perspective, property visits and a more focused
+                    search across Delhi NCR.</p>
+            </div>
+
+            <div class="grid">
+
+                <div class="card broker">
+                    <img loading="lazy"
+                        src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=300&q=85"
+                        alt="Rahul Sharma, Gurgaon property specialist">
+                    <h3>Rahul Sharma</h3>
+                    <div class="rating">★★★★★</div>
+                    <p>Gurgaon Property Specialist</p>
+                    <p>15+ Years Experience</p>
+                    <br>
+                    <a href="#contact" class="btn btn-dark">Contact Broker</a>
+                </div>
+
+                <div class="card broker">
+                    <img loading="lazy"
+                        src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=85"
+                        alt="Neha Kapoor, Noida property specialist">
+                    <h3>Neha Kapoor</h3>
+                    <div class="rating">★★★★★</div>
+                    <p>Noida Property Specialist</p>
+                    <p>10+ Years Experience</p>
+                    <br>
+                    <a href="#contact" class="btn btn-dark">Contact Broker</a>
+                </div>
+
+                <div class="card broker">
+                    <img loading="lazy"
+                        src="https://images.unsplash.com/photo-1562788869-4ed32648eb72?auto=format&fit=crop&w=300&q=85"
+                        alt="Amit Verma, luxury property specialist">
+                    <h3>Amit Verma</h3>
+                    <div class="rating">★★★★★</div>
+                    <p>Luxury Property Specialist</p>
+                    <p>12+ Years Experience</p>
+                    <br>
+                    <a href="#contact" class="btn btn-dark">Contact Broker</a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- WHY LANDLINE -->
+    <section class="why">
+
+        <div class="container">
+
+            <div class="section-head">
+                <span>Why Landline</span>
+                <h2>A Smarter Way to Find Property</h2>
+                <p style="color:#aaa;">Everything you need to find the right property and make confident decisions.</p>
+            </div>
+
+            <div class="features">
+
+                <div class="feature">
+                    <div class="feature-icon">✓</div>
+                    <h3>Curated Property Options</h3>
+                    <p>Explore carefully selected residential, commercial and investment opportunities.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">♙</div>
+                    <h3>Local Market Expertise</h3>
+                    <p>Get guidance from professionals familiar with Gurgaon, Noida and Greater Noida.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">⌂</div>
+                    <h3>Personalized Assistance</h3>
+                    <p>Shortlist properties based on your location, budget, configuration and requirements.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">↗</div>
+                    <h3>Easy Property Visits</h3>
+                    <p>Connect with the right property representative and arrange visits with ease.</p>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SELL PROPERTY -->
+    <section class="sell" id="sell">
+
+        <div class="container">
+
+            <div class="sell-content">
+
+                <span class="tag">FOR OWNERS & gallery</span>
+
+                <h2>Have a Property to Sell or Rent?</h2>
+                <p>List your property on Landline and connect with genuine buyers and tenants looking for their next
+                    property.</p>
+
+                <a href="#contact" class="btn btn-gold">List Your Property</a>
+
+            </div>
+
+        </div>
+    </section>
+    <!-- CONTACT -->
+    <section id="contact">
+
+        <div class="container contact-wrapper">
+
+            <div class="contact-info">
+
+                <span style="color:#dace50;font-weight:bold;">GET EXPERT ASSISTANCE</span>
+
+                <h2>Tell Us What You’re Looking For</h2>
+
+                <p>Share your preferred location, property type, budget and requirements. Our team will help you
+                    discover suitable options and connect you with the right local professional.</p>
+                <br>
+
+                <p><strong>📞 +91 90126 2299</strong></p>
+                <p><strong>✉️ hello@landline.com</strong></p>
+
+            </div>
+
+
+            <form data-landline-lead-form>
+
+                <h3 style="font-size:25px;margin-bottom:20px;">Request Expert Assistance</h3>
+
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" name="name" autocomplete="name" placeholder="Enter your name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" name="phone" autocomplete="tel" placeholder="+91 XXXXX XXXXX" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Looking For</label>
+                    <select name="requirement" required>
+                        <option value="">Select Requirement</option>
+                        <option>Buy Property</option>
+                        <option>Rent Property</option>
+                        <option>Sell Property</option>
+                        <option>Commercial Property</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Your Requirement</label>
+                    <textarea name="message" placeholder="Tell us your preferred location, budget, BHK etc."></textarea>
+                </div>
+
+                <button class="btn btn-dark">Submit Enquiry</button>
+
+            </form>
+
+        </div>
+    </section>
+
+
+    <!-- SEO CONTENT & FAQ -->
+    <section class="seo-content">
+        <div class="container">
+            <div class="content-grid">
+                <div>
+                    <span style="color:#c89b3c;font-weight:bold;">LOCAL PROPERTY GUIDANCE</span>
+                    <h2 style="font-size:34px;line-height:1.2;margin:10px 0 16px;">Find the Right Property Across
+                        Delhi NCR</h2>
+                    <p style="color:#1c1c1c;">From premium apartments and villas to plots, commercial properties and new
+                        residential projects, the Delhi NCR market offers a wide range of choices. Landline Properties
+                        helps buyers and tenants compare suitable options by location, budget, property type and
+                        configuration.</p>
+                    <p style="color:#666;margin-top:12px;">Whether you are exploring real estate in Gurgaon, properties
+                        in Noida or opportunities in Greater Noida, our team can help you connect with local property
+                        brokers and request current availability before a visit.</p>
+                    <a href="featured-properties.html" class="btn btn-dark"
+                        style="display:inline-block;margin-top:20px;">Explore Properties</a>
+                </div>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <h3>What types of properties does Landline Properties offer?</h3>
+                        <p>Explore apartments, villas, plots, commercial spaces, rental options and new projects.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Which areas does Landline Properties cover?</h3>
+                        <p>We cover Gurgaon, Noida, Greater Noida and wider Delhi NCR locations.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Can I find new residential projects?</h3>
+                        <p>Yes. Visit the New Projects page to explore current and upcoming residential developments.
+                        </p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Can I get assistance from a local property broker?</h3>
+                        <p>Share your requirement and we will help connect you with a suitable local professional.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Can property owners list their property?</h3>
+                        <p>Yes, use the List Your Property page to share a property for sale or rent.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>How can I request property assistance?</h3>
+                        <p>Use the enquiry form to share your location, budget and property requirement.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+
+        <div class="container">
+
+            <div class="footer-grid">
+
+                <div class="footer-col">
+
+                    <div class="logo" style="color:#fff;">Land<span>line</span></div>
+
+                    <p style="margin-top:15px;">
+                        Your trusted real-estate connection for verified properties, premium projects and experienced
+                        brokers.
+                    </p>
+
+                </div>
+
+                <div class="footer-col">
+                    <h3>Explore</h3>
+                    <a href="featured-properties.html">Buy Property</a>
+                    <a href="rent.html">Rent Property</a>
+                    <a href="new-projects.html">New Projects</a>
+                    <a href="gallery-profile.html">Find Gallery</a>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Locations</h3>
+                    <a href="locations.html">Gurgaon</a>
+                    <a href="locations.html">Noida</a>
+                    <a href="locations.html">Greater Noida</a>
+                    <a href="locations.html">Delhi</a>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Company</h3>
+                    <a href="about.html">About Us</a>
+                    <a href="contact.html">Contact</a>
+                    <a href="privacy-policy.html">Privacy Policy</a>
+                    <a href="terms-and-conditions.html">Terms & Conditions</a>
+                </div>
+
+            </div>
+
+            <div class="copyright">
+                © 2026 Landline. All Rights Reserved.
+            </div>
+
+        </div>
+    </footer>
+
+    <script>
+
+        const budgetSelect = document.getElementById('property-budget');
+        budgetSelect.innerHTML = [
+            ['Under ₹25 Lakh', 'Under ₹25 Lakh'],
+            ['₹25–50 Lakh', '₹25–50 Lakh'],
+            ['₹50 Lakh–₹1 Crore', '₹50 Lakh–₹1 Crore'],
+            ['₹1–2 Crore', '₹1–2 Crore'],
+            ['₹2 Crore+', '₹2 Crore+'],
+            ['custom', 'Enter Your Budget']
+        ].map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+
+        let activeDropdown = null;
+        const supportsRealHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+        document.querySelectorAll('.search-item select').forEach((select) => {
+            select.classList.add('native-select');
+            const searchItem = select.closest('.search-item');
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'hover-select';
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'hover-select-trigger';
+            trigger.textContent = select.options[select.selectedIndex].text;
+            trigger.setAttribute('aria-haspopup', 'listbox');
+            trigger.setAttribute('aria-expanded', 'false');
+
+            const options = document.createElement('ul');
+            options.className = 'hover-select-options';
+            options.setAttribute('role', 'listbox');
+
+            Array.from(select.options).forEach((option, index) => {
+                const item = document.createElement('li');
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'hover-select-option';
+                button.textContent = option.text;
+                button.setAttribute('role', 'option');
+                button.addEventListener('pointerdown', (event) => {
+                    event.stopPropagation();
+                });
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    select.selectedIndex = index;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    trigger.textContent = option.text;
+                    options.querySelectorAll('.hover-select-option').forEach((entry) => {
+                        entry.setAttribute('aria-selected', String(entry === button));
+                    });
+                    close();
+                });
+                item.appendChild(button);
+                options.appendChild(item);
+            });
+
+            let closeTimer;
+            const open = () => {
+                clearTimeout(closeTimer);
+                if (activeDropdown && activeDropdown !== dropdown) {
+                    activeDropdown.closeMenu();
+                }
+                dropdown.classList.add('is-open');
+                trigger.setAttribute('aria-expanded', 'true');
+                activeDropdown = dropdown;
+            };
+            const close = () => {
+                clearTimeout(closeTimer);
+                dropdown.classList.remove('is-open', 'is-custom');
+                trigger.setAttribute('aria-expanded', 'false');
+                if (activeDropdown === dropdown) activeDropdown = null;
+            };
+
+            const scheduleClose = () => {
+                clearTimeout(closeTimer);
+                closeTimer = setTimeout(close, 180);
+            };
+            const openOnHover = () => {
+                clearTimeout(closeTimer);
+                open();
+            };
+
+            dropdown.append(trigger, options);
+            select.insertAdjacentElement('afterend', dropdown);
+            dropdown.closeMenu = close;
+            if (supportsRealHover) {
+                searchItem.addEventListener('pointerenter', (event) => {
+                    if (event.pointerType === 'mouse') openOnHover();
+                });
+                searchItem.addEventListener('pointerleave', (event) => {
+                    if (event.pointerType === 'mouse') scheduleClose();
+                });
+            }
+            dropdown.addEventListener('pointerdown', (event) => event.stopPropagation());
+            trigger.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (dropdown.classList.contains('is-open')) close();
+                else open();
+            });
+        });
+
+        const budgetDropdown = budgetSelect.nextElementSibling;
+        const budgetTrigger = budgetDropdown.querySelector('.hover-select-trigger');
+        const budgetOptions = budgetDropdown.querySelector('.hover-select-options');
+        const customPanel = document.createElement('div');
+        customPanel.className = 'budget-custom-panel';
+        customPanel.innerHTML = `<span class="budget-panel-title">Custom budget</span><label for="custom-budget-amount">Amount</label><div class="budget-input-wrap"><span>₹</span><input id="custom-budget-amount" inputmode="numeric" autocomplete="off" placeholder="Enter amount" aria-label="Custom budget amount"></div><label for="custom-budget-unit">Unit</label><select id="custom-budget-unit" aria-label="Budget unit"><option>Lakh</option><option>Crore</option></select><button type="button" class="budget-apply">Apply</button>`;
+        budgetDropdown.appendChild(customPanel);
+        const customAmount = customPanel.querySelector('#custom-budget-amount');
+        const customUnit = customPanel.querySelector('#custom-budget-unit');
+        const formatIndian = (digits) => digits ? Number(digits).toLocaleString('en-IN') : '';
+        const conciseBudget = (amount, unit) => {
+            const value = Number(amount);
+            if (!value) return '';
+            const divisor = unit === 'Crore' ? 10000000 : 100000;
+            const display = value / divisor;
+            return `₹${Number.isInteger(display) ? display : display.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')} ${unit}`;
+        };
+        customAmount.addEventListener('input', () => {
+            const digits = customAmount.value.replace(/\D/g, '');
+            customAmount.value = formatIndian(digits);
+        });
+        budgetSelect.addEventListener('change', () => {
+            if (budgetSelect.value !== 'custom') budgetDropdown.classList.remove('is-custom');
+        });
+        [...budgetOptions.querySelectorAll('.hover-select-option')].find((button) => button.textContent === 'Enter Your Budget').addEventListener('click', () => {
+            budgetDropdown.classList.add('is-open', 'is-custom');
+            budgetTrigger.setAttribute('aria-expanded', 'true');
+            activeDropdown = budgetDropdown;
+            setTimeout(() => customAmount.focus(), 0);
+        });
+        customPanel.querySelector('.budget-apply').addEventListener('click', () => {
+            const amount = customAmount.value.replace(/\D/g, '');
+            if (!amount || Number(amount) <= 0) { customAmount.focus(); return; }
+            const summary = conciseBudget(amount, customUnit.value);
+            budgetSelect.value = 'custom';
+            budgetSelect.dataset.customAmount = amount;
+            budgetSelect.dataset.customUnit = customUnit.value;
+            budgetTrigger.textContent = summary;
+            budgetDropdown.classList.remove('is-open', 'is-custom');
+            budgetTrigger.setAttribute('aria-expanded', 'false');
+            activeDropdown = null;
+        });
+
+        document.addEventListener('pointerdown', (event) => {
+            if (activeDropdown && !event.target.closest('.hover-select')) {
+                activeDropdown.closeMenu();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && activeDropdown) activeDropdown.closeMenu();
+        });
+
+        function searchProperty() {
+            const purpose = document.getElementById("property-purpose").value;
+            const rawLocation = document.getElementById("property-location").value;
+            const rawType = document.getElementById("property-type").value;
+            const budgetIndex = document.getElementById("property-budget").selectedIndex;
+            const page = purpose === "Rental" ? "rent.html" : purpose === "Investment" ? "investment.html" : "featured-properties.html";
+            const location = rawLocation === 'Delhi NCR' ? 'Delhi' : rawLocation;
+            const type = purpose === 'Investment'
+                ? ({ Apartment: 'Residential', Villa: 'Residential', Plot: 'Plot/Land', Commercial: 'Commercial' }[rawType] || rawType)
+                : rawType;
+            const search = new URLSearchParams({ location, type });
+            if (purpose !== 'Rental') {
+                const budgetCodes = ['25', '50', '100', '200', '200+'];
+                const budgetCode = budgetCodes[budgetIndex];
+                if (budgetCode) search.set('budget', budgetCode);
+            }
+            window.location.href = page + "?" + search.toString();
+        }
+
+        function submitForm(event) {
+            event.preventDefault();
+
+            alert("Thank you! Your enquiry has been submitted. Our property expert will contact you soon.");
+
+            event.target.reset();
+        }
+
+    </script>
+
+</body>
+
+</html>

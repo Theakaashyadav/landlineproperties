@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Property | Landline Properties Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+  <div id="sidebar-mount"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <h1 id="form-title">Edit Property</h1>
+      </div>
+      <a href="properties.html" class="btn btn-outline">← Back to Properties</a>
+    </div>
+
+    <div class="content">
+      <form id="property-form">
+        <div class="panel">
+          <h3>Basic Details</h3>
+          <div class="form-grid">
+            <div class="form-field full"><label>Title *</label><input id="title" required placeholder="Luxury 3 BHK Apartment"></div>
+            <div class="form-field">
+              <label>Property Type *</label>
+              <select id="property_type" required>
+                <option value="">Select</option>
+                <option>Apartment</option><option>Villa</option><option>Plot</option>
+                <option>Independent House</option><option>Builder Floor</option>
+                <option>Commercial</option><option>Office</option><option>Shop</option>
+                <option>Warehouse</option><option>Land</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Purpose *</label>
+              <select id="purpose" required>
+                <option value="">Select</option>
+                <option>Buy</option><option>Rent</option><option>Commercial</option>
+              </select>
+            </div>
+            <div class="form-field"><label>Price (₹) *</label><input type="number" id="price" required placeholder="25000000"></div>
+            <div class="form-field"><label>Price Label</label><input id="price_label" placeholder="e.g. Starting ₹2.5 Cr"></div>
+            <div class="form-field"><label>City *</label>
+              <select id="city" required>
+                <option value="">Select</option>
+                <option>Gurgaon</option><option>Noida</option><option>Greater Noida</option><option>Delhi NCR</option>
+              </select>
+            </div>
+            <div class="form-field"><label>Locality</label><input id="locality" placeholder="Golf Course Road"></div>
+            <div class="form-field"><label>Sector</label><input id="sector" placeholder="Sector 150"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Specifications</h3>
+          <div class="form-grid">
+            <div class="form-field"><label>BHK</label><input id="bhk" placeholder="3 BHK"></div>
+            <div class="form-field"><label>Bathrooms</label><input type="number" id="bathrooms"></div>
+            <div class="form-field"><label>Area</label><input type="number" id="area" placeholder="1850"></div>
+            <div class="form-field"><label>Area Unit</label>
+              <select id="area_unit"><option>Sq.Ft.</option><option>Sq.Yd.</option><option>Acres</option></select>
+            </div>
+            <div class="form-field"><label>Property Status</label>
+              <select id="property_status"><option>Ready to Move</option><option>Under Construction</option></select>
+            </div>
+            <div class="form-field"><label>Possession Status</label><input id="possession_status" placeholder="Immediate"></div>
+            <div class="form-field"><label>Furnishing</label>
+              <select id="furnishing"><option value="">Select</option><option>Unfurnished</option><option>Semi-Furnished</option><option>Fully Furnished</option></select>
+            </div>
+            <div class="form-field"><label>Facing</label><input id="property_facing" placeholder="East"></div>
+            <div class="form-field"><label>Floor</label><input id="floor" placeholder="4"></div>
+            <div class="form-field"><label>Total Floors</label><input id="total_floors" placeholder="12"></div>
+            <div class="form-field"><label>Parking</label><input id="parking" placeholder="2 Covered"></div>
+            <div class="form-field"><label>Year Built</label><input type="number" id="year_built" placeholder="2022"></div>
+            <div class="form-field"><label>Developer</label><input id="developer"></div>
+            <div class="form-field"><label>RERA Number</label><input id="rera_number"></div>
+            <div class="form-field full"><label>Amenities (comma separated)</label><input id="amenities" placeholder="Swimming Pool, Gym, Clubhouse, Power Backup"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Description</h3>
+          <div class="form-grid">
+            <div class="form-field full"><label>Short Description</label><textarea id="short_description" style="min-height:60px;"></textarea></div>
+            <div class="form-field full"><label>Full Description</label><textarea id="description" style="min-height:140px;"></textarea></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Flags & Status</h3>
+          <div class="form-grid">
+            <div class="form-field"><label>Status</label>
+              <select id="status">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="pending">Pending Review</option>
+                <option value="sold">Sold</option>
+                <option value="rented">Rented</option>
+                <option value="unpublished">Unpublished</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>&nbsp;</label>
+              <div class="checkbox-row"><input type="checkbox" id="featured"><label>Featured</label></div>
+              <div class="checkbox-row"><input type="checkbox" id="verified"><label>Verified</label></div>
+              <div class="checkbox-row"><input type="checkbox" id="new_launch"><label>New Launch</label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>SEO</h3>
+          <div class="form-grid">
+            <div class="form-field full"><label>SEO Title</label><input id="seo_title"></div>
+            <div class="form-field full"><label>SEO Description</label><textarea id="seo_description" style="min-height:60px;"></textarea></div>
+            <div class="form-field full"><label>Canonical URL</label><input id="canonical_url"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Images</h3>
+          <p class="hint" style="margin-top:-6px;">JPEG, PNG or WEBP, up to 5MB each.</p>
+          <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp" multiple>
+          <div id="image-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:16px;"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submit-btn">Save Property</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin-core.js"></script>
+<script src="js/property-form.js"></script>
+<script>initPropertyForm('edit');</script>
+</body>
+</html>

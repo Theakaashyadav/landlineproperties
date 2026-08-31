@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads | Landline Properties Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+  <div id="sidebar-mount"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <h1>Leads</h1>
+      </div>
+      <button class="btn btn-outline" id="export-btn">⬇ Export CSV</button>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <input type="text" id="search-input" placeholder="Search name, phone, email..." style="flex:1;min-width:200px;">
+          <select id="status-filter">
+            <option value="">All Statuses</option>
+            <option>New</option><option>Contacted</option><option>Follow-up</option>
+            <option>Site Visit</option><option>Interested</option><option>Converted</option>
+            <option>Not Interested</option><option>Closed</option>
+          </select>
+        </div>
+
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Requirement</th><th>Location</th><th>Source</th><th>Status</th><th>Received</th><th>Actions</th></tr></thead>
+          <tbody id="table-body"><tr><td colspan="8" class="empty-state">Loading leads...</td></tr></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin-core.js"></script>
+<script>
+requireAuth();
+renderShell('leads.html');
+
+const STATUS_OPTIONS = ['New','Contacted','Follow-up','Site Visit','Interested','Converted','Not Interested','Closed'];
+let currentPage = 1;
+let searchTimer = null;
+let cachedRows = [];
+
+async function loadLeads(page = 1) {
+  currentPage = page;
+  const q = document.getElementById('search-input').value.trim();
+  const status = document.getElementById('status-filter').value;
+  const params = new URLSearchParams({ page, limit: 20 });
+  if (q) params.set('q', q);
+  if (status) params.set('status', status);
+
+  document.getElementById('table-body').innerHTML = `<tr><td colspan="8" class="empty-state">Loading...</td></tr>`;
+  try {
+    const res = await apiRequest(`/admin/leads?${params.toString()}`);
+    cachedRows = res.data;
+    renderTable(res.data);
+    renderPagination(res.pagination);
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+function renderTable(rows) {
+  const body = document.getElementById('table-body');
+  if (!rows.length) { body.innerHTML = `<tr><td colspan="8" class="empty-state">No leads found.</td></tr>`; return; }
+  body.innerHTML = rows.map(l => `
+    <tr data-id="${l.id}">
+      <td data-label="Name">${escapeHtml(l.name)}</td>
+      <td data-label="Phone"><a href="tel:${escapeHtml(l.phone)}">${escapeHtml(l.phone)}</a></td>
+      <td data-label="Requirement">${escapeHtml(l.requirement || l.property_title || '-')}</td>
+      <td data-label="Location">${escapeHtml(l.location || '-')}</td>
+      <td data-label="Source">${escapeHtml(l.source)}</td>
+      <td data-label="Status">
+        <select data-status-id="${l.id}">
+          ${STATUS_OPTIONS.map(s => `<option ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td data-label="Received">${new Date(l.created_at).toLocaleDateString('en-IN')}</td>
+      <td data-label="Actions">
+        <div class="table-actions">
+          <button class="btn btn-sm btn-outline" data-note="${l.id}">+ Note</button>
+          <button class="btn btn-sm btn-danger" data-delete="${l.id}">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderPagination(p) {
+  const el = document.getElementById('pagination');
+  if (p.totalPages <= 1) { el.innerHTML = ''; return; }
+  let html = '';
+  for (let i = 1; i <= p.totalPages; i++) html += `<button class="${i === p.page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+  el.innerHTML = html;
+  el.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => loadLeads(Number(btn.dataset.page))));
+}
+
+document.getElementById('table-body').addEventListener('change', async (e) => {
+  const sel = e.target.closest('[data-status-id]');
+  if (!sel) return;
+  try {
+    await apiRequest(`/admin/leads/${sel.dataset.statusId}`, { method: 'PUT', body: { status: sel.value } });
+    toast('Lead status updated.');
+  } catch (err) { toast(err.message, 'error'); }
+});
+
+document.getElementById('table-body').addEventListener('click', async (e) => {
+  const noteBtn = e.target.closest('[data-note]');
+  const delBtn = e.target.closest('[data-delete]');
+  if (noteBtn) {
+    const note = prompt('Add a note for this lead:');
+    if (!note) return;
+    try {
+      await apiRequest(`/admin/leads/${noteBtn.dataset.note}/notes`, { method: 'POST', body: { note } });
+      toast('Note added.');
+    } catch (err) { toast(err.message, 'error'); }
+  }
+  if (delBtn) {
+    if (!confirm('Delete this lead?')) return;
+    try {
+      await apiRequest(`/admin/leads/${delBtn.dataset.delete}`, { method: 'DELETE' });
+      toast('Lead deleted.');
+      loadLeads(currentPage);
+    } catch (err) { toast(err.message, 'error'); }
+  }
+});
+
+document.getElementById('search-input').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => loadLeads(1), 350); });
+document.getElementById('status-filter').addEventListener('change', () => loadLeads(1));
+
+document.getElementById('export-btn').addEventListener('click', () => {
+  if (!cachedRows.length) { toast('Nothing to export on this page.', 'error'); return; }
+  const headers = ['Name','Phone','Email','Requirement','Location','Budget','Status','Source','Received'];
+  const csvRows = [headers.join(',')];
+  cachedRows.forEach(l => {
+    csvRows.push([l.name, l.phone, l.email || '', l.requirement || '', l.location || '', l.budget || '', l.status, l.source, l.created_at]
+      .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+  });
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `leads-page-${currentPage}.csv`;
+  a.click();
+});
+
+loadLeads();
+</script>
+</body>
+</html>

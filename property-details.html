@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Property Details | Landline Properties</title>
+    <meta name="description" content="Review property information and enquire with Landline Properties.">
+    <link rel="stylesheet" href="professional-footer.css">
+    <link rel="stylesheet" href="mobile-nav.css">
+    <link rel="stylesheet" href="marketplace.css">
+    <script src="site.js" defer></script>
+    <script src="marketplace.js" defer></script>
+    <script src="property-details.js" defer></script>
+</head>
+
+<body>
+    <header class="market-header">
+        <div class="container navbar"><a class="header-logo" href="index.html"><img src="image/Landline.png"
+                    alt="Landline Properties"></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a class="active" aria-current="page" href="featured-properties.html">Buy</a></li>
+                <li><a href="rent.html">Rent</a></li>
+                <li><a href="investment.html">Investment</a></li>
+                <li><a href="new-projects.html">New Projects</a></li>
+                <li><a href="gallery-profile.html">Gallery</a></li>
+                <li><a href="locations.html">Locations</a></li>
+                <li><a href="about.html">About Us</a></li>
+            </ul>
+            <div class="nav-buttons"><a class="btn" href="contact.html">Contact</a><a class="btn btn-dark"
+                    href="list-property.html">List Property</a></div>
+        </div>
+    </header>
+    <main id="detail-main">
+        <section class="section">
+            <div class="container">
+                <p>Loading property details…</p>
+            </div>
+        </section>
+    </main>
+    <footer></footer>
+    <dialog class="modal" id="enquiry-modal">
+        <div class="modal-inner">
+            <div class="modal-head">
+                <h2>Enquire About This Property</h2><button class="modal-close" data-modal-close
+                    aria-label="Close">×</button>
+            </div>
+            <form id="enquiry-form" class="form-grid"><input type="hidden" name="property"><label>Name<input name="name"
+                        required></label><label>Mobile<input name="mobile" required inputmode="tel"
+                        pattern="[0-9 +()-]{8,15}"></label><label>Email<input name="email"
+                        type="email"></label><label>Preferred Location<input
+                        name="preferredLocation"></label><label>Requirement<input name="requirement"
+                        required></label><label>Budget<input name="budget"></label><label class="full">Message<textarea
+                        name="message"></textarea></label><button class="btn btn-dark full">Submit Enquiry</button>
+                <p class="form-status full" role="status"></p>
+            </form>
+        </div>
+    </dialog>
+</body>
+
+</html>

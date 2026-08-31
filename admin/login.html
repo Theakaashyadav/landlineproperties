@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login | Landline Properties</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="brand">LAND<span>LINE</span></div>
+    <div class="sub">Admin Dashboard Login</div>
+
+    <div class="error-box" id="error-box"></div>
+
+    <form id="login-form">
+      <div class="form-field">
+        <label>Email</label>
+        <input type="email" id="email" required autocomplete="username" placeholder="admin@landline.com">
+      </div>
+      <div class="form-field">
+        <label>Password</label>
+        <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Log In</button>
+    </form>
+  </div>
+</div>
+
+<script src="js/admin-core.js"></script>
+<script>
+  if (!window.__LANDLINE_FILE_ORIGIN__) {
+  // Already logged in? Verify the secure server-side cookie first.
+  apiRequest('/auth/me').then(() => { window.location.href = 'dashboard.html'; }).catch(() => {});
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('error-box');
+    const btn = document.getElementById('submit-btn');
+    errorBox.style.display = 'none';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+
+    try {
+      const res = await apiRequest('/auth/login', { method: 'POST', body: { email, password } });
+      Auth.setUser(res.user);
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      errorBox.textContent = err.message || 'Login failed.';
+      errorBox.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Log In';
+    }
+  });
+  }
+</script>
+</body>
+</html>

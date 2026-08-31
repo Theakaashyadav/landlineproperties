@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Properties for Rent in Delhi NCR | Landline Properties</title>
+    <meta name="description"
+        content="Find rental homes, furnished apartments and commercial spaces across Gurgaon, Noida, Greater Noida and Delhi.">
+    <link rel="canonical" href="https://landlineproperties.com/rent.html">
+    <meta property="og:title" content="Properties for Rent in Delhi NCR | Landline Properties">
+    <meta property="og:type" content="website">
+    <link rel="stylesheet" href="professional-footer.css">
+    <link rel="stylesheet" href="mobile-nav.css">
+    <link rel="stylesheet" href="marketplace.css">
+    <script src="site.js" defer></script>
+    <script src="marketplace.js" defer></script>
+</head>
+
+<body class="rent-page" data-market-page="rent">
+    <header class="market-header">
+        <div class="container navbar"><a class="header-logo" href="index.html"><img src="image/Landline.png"
+                    alt="Landline Properties"></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="featured-properties.html">Buy</a></li>
+                <li><a class="active" aria-current="page" href="rent.html">Rent</a></li>
+                <li><a href="investment.html">Investment</a></li>
+                <li><a href="new-projects.html">New Projects</a></li>
+                <li><a href="gallery-profile.html">Gallery</a></li>
+                <li><a href="locations.html">Locations</a></li>
+                <li><a href="about.html">About Us</a></li>
+            </ul>
+            <div class="nav-buttons"><a class="btn" href="contact.html">Contact</a><a class="btn btn-dark"
+                    href="list-property.html">List Property</a></div>
+        </div>
+    </header>
+    <main>
+        <section class="hero hero-rent">
+            <div class="container hero-copy"><span class="eyebrow">Rent with confidence</span>
+                <h1>Find the Right Property for Rent in Delhi NCR</h1>
+                <p>Discover quality rental homes, apartments and commercial spaces in prime locations across Delhi NCR.
+                </p>
+            </div>
+        </section>
+        <div class="container search-panel">
+            <form id="market-search" class="search-grid"><label>Location<select name="location">
+                        <option value="">All locations</option>
+                        <option>Gurgaon</option>
+                        <option>Noida</option>
+                        <option>Greater Noida</option>
+                        <option>Delhi</option>
+                    </select></label><label>Property Type<select name="type">
+                        <option value="">All types</option>
+                        <option>Apartment</option>
+                        <option>Villa</option>
+                        <option>Commercial</option>
+                    </select></label><label>BHK<select name="bhk">
+                        <option value="">Any</option>
+                        <option>1 BHK</option>
+                        <option>2 BHK</option>
+                        <option>3 BHK</option>
+                        <option>4 BHK</option>
+                    </select></label><label>Monthly Rent<select name="budget">
+                        <option value="">Any rent</option>
+                        <option value="40000">Up to ₹40,000</option>
+                        <option value="70000">Up to ₹70,000</option>
+                        <option value="120000">Up to ₹1.20 Lakh</option>
+                        <option value="250000">Up to ₹2.50 Lakh</option>
+                    </select></label><label>Furnishing<select name="furnishing">
+                        <option value="">Any</option>
+                        <option>Furnished</option>
+                        <option>Semi-Furnished</option>
+                        <option>Unfurnished</option>
+                    </select></label>
+                <div class="search-actions"><button class="btn btn-dark">Find Rental Property</button><button
+                        class="btn" type="reset">Clear Filters</button></div>
+            </form>
+        </div>
+        <section class="section rent-band">
+            <div class="container">
+                <div class="section-head">
+                    <div><span class="eyebrow">Match your move</span>
+                        <h2>Rental Categories</h2>
+                    </div>
+                </div>
+                <div class="category-row"><button class="category-btn" data-filter="1 BHK" data-field="bhk">1
+                        BHK</button><button class="category-btn" data-filter="2 BHK" data-field="bhk">2
+                        BHK</button><button class="category-btn" data-filter="3 BHK" data-field="bhk">3
+                        BHK</button><button class="category-btn" data-filter="4 BHK" data-field="bhk">4
+                        BHK+</button><button class="category-btn" data-filter="Furnished"
+                        data-field="furnishing">Furnished</button><button class="category-btn"
+                        data-filter="Commercial">Commercial</button></div>
+            </div>
+        </section>
+        <section class="section" id="listings">
+            <div class="container">
+                <div class="section-head">
+                    <div><span class="eyebrow">Current rental options</span>
+                        <h2>Available Rental Properties</h2>
+                    </div>
+                    <p>Monthly rent, furnishing and availability are foregrounded for faster shortlisting.</p>
+                </div>
+                <div class="listing-toolbar"><strong id="result-count"></strong><label>Sort by <select id="sort">
+                            <option>Recommended</option>
+                            <option value="low">Rent: low to high</option>
+                            <option value="high">Rent: high to low</option>
+                        </select></label></div>
+                <div class="property-grid" id="property-grid"></div>
+            </div>
+        </section>
+        <section class="section rent-band">
+            <div class="container">
+                <div class="section-head">
+                    <div><span class="eyebrow">Choose your fit</span>
+                        <h2>Rental Property Types</h2>
+                    </div>
+                </div>
+                <div class="rent-types">
+                    <article class="rent-type">
+                        <h3>Residential Rentals</h3>
+                        <p>Apartments and family homes aligned with commute and budget.</p>
+                    </article>
+                    <article class="rent-type">
+                        <h3>Luxury Rentals</h3>
+                        <p>Spacious, well-appointed homes in premium neighbourhoods.</p>
+                    </article>
+                    <article class="rent-type">
+                        <h3>Commercial Rentals</h3>
+                        <p>Office and retail spaces for different requirements.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+        <section class="section">
+            <div class="container">
+                <div class="section-head">
+                    <div><span class="eyebrow">Before you sign</span>
+                        <h2>Everything You Should Know Before Renting</h2>
+                    </div>
+                </div>
+                <div class="info-grid">
+                    <article class="info-card">
+                        <h3>Documents Required</h3>
+                        <p>Keep identity, address and income documentation ready.</p>
+                    </article>
+                    <article class="info-card">
+                        <h3>Security Deposit</h3>
+                        <p>Confirm deductions and return conditions in writing.</p>
+                    </article>
+                    <article class="info-card">
+                        <h3>Rent Agreement</h3>
+                        <p>Review tenure, notice and renewal clauses carefully.</p>
+                    </article>
+                    <article class="info-card">
+                        <h3>Maintenance Charges</h3>
+                        <p>Clarify inclusions and variable charges.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+        <section class="section alt">
+            <div class="container">
+                <div class="section-head">
+                    <div><span class="eyebrow">A simpler journey</span>
+                        <h2>How Renting Works</h2>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step"><strong>01</strong>
+                        <h3>Search</h3>
+                    </div>
+                    <div class="step"><strong>02</strong>
+                        <h3>Shortlist</h3>
+                    </div>
+                    <div class="step"><strong>03</strong>
+                        <h3>Schedule Visit</h3>
+                    </div>
+                    <div class="step"><strong>04</strong>
+                        <h3>Verify</h3>
+                    </div>
+                    <div class="step"><strong>05</strong>
+                        <h3>Rent</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="section">
+            <div class="container faq">
+                <div class="section-head">
+                    <div><span class="eyebrow">Rental answers</span>
+                        <h2>Frequently Asked Questions</h2>
+                    </div>
+                </div>
+                <details>
+                    <summary>How much security deposit is typical?</summary>
+                    <p>It varies. Confirm the amount and refund terms before committing.</p>
+                </details>
+                <details>
+                    <summary>What should a rent agreement include?</summary>
+                    <p>Rent, deposit, tenure, notice, maintenance and responsibilities.</p>
+                </details>
+                <details>
+                    <summary>Can I schedule a site visit?</summary>
+                    <p>Yes. Use any Schedule Visit button and share your timing.</p>
+                </details>
+                <details>
+                    <summary>Are maintenance charges included?</summary>
+                    <p>Inclusions vary and should be confirmed for each property.</p>
+                </details>
+                <details>
+                    <summary>Is tenant verification required?</summary>
+                    <p>Ask the owner and relevant authorities about the current local process.</p>
+                </details>
+            </div>
+        </section>
+        <section class="section dark">
+            <div class="container">
+                <div class="cta">
+                    <div>
+                        <h2>Looking for a Rental Property?</h2>
+                        <p>Share your preferred location, budget and requirements.</p>
+                    </div><button class="btn btn-gold" data-enquire data-requirement="Rental property">Find My Rental
+                        Home</button>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer></footer>
+    <dialog class="modal" id="enquiry-modal">
+        <div class="modal-inner">
+            <div class="modal-head">
+                <h2>Schedule a Visit</h2><button class="modal-close" data-modal-close aria-label="Close">×</button>
+            </div>
+            <form id="enquiry-form" class="form-grid"><input type="hidden" name="property"><label>Name<input name="name"
+                        required></label><label>Mobile<input name="mobile" required inputmode="tel"
+                        pattern="[0-9 +()-]{8,15}"></label><label>Email<input name="email"
+                        type="email"></label><label>Preferred Location<input
+                        name="preferredLocation"></label><label>Requirement<input name="requirement"
+                        required></label><label>Monthly Budget<input name="budget"></label><label
+                    class="full">Message<textarea name="message"></textarea></label><button
+                    class="btn btn-dark full">Request Visit</button>
+                <p class="form-status full" role="status"></p>
+            </form>
+        </div>
+    </dialog>
+    <div class="mobile-contact"><a class="btn" href="tel:+919876543210">Call</a><button class="btn btn-dark"
+            data-enquire>Schedule Visit</button></div>
+</body>
+
+</html>

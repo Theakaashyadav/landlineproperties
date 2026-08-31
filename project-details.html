@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Project Details | Landline Properties</title>
+    <meta name="description" content="Review new residential project information and request details.">
+    <link rel="stylesheet" href="professional-footer.css">
+    <link rel="stylesheet" href="mobile-nav.css">
+    <link rel="stylesheet" href="marketplace.css">
+    <link rel="stylesheet" href="discovery.css">
+    <script src="site.js" defer></script>
+    <script src="discovery.js" defer></script>
+    <script src="project-details.js" defer></script>
+</head>
+
+<body>
+    <header class="market-header">
+        <div class="container navbar"><a class="header-logo" href="index.html"><img src="image/Landline.png"
+                    alt="Landline Properties"></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="featured-properties.html">Buy</a></li>
+                <li><a href="rent.html">Rent</a></li>
+                <li><a href="investment.html">Investment</a></li>
+                <li><a class="active" aria-current="page" href="new-projects.html">New Projects</a></li>
+                <li><a href="gallery-profile.html">Gallery</a></li>
+                <li><a href="locations.html">Locations</a></li>
+                <li><a href="about.html">About Us</a></li>
+            </ul>
+            <div class="nav-buttons"><a class="btn" href="contact.html">Contact</a></div>
+        </div>
+    </header>
+    <main id="project-detail">
+        <section class="section">
+            <div class="container">Loading project details…</div>
+        </section>
+    </main>
+    <footer></footer>
+    <dialog class="modal" id="enquiry-modal">
+        <div class="modal-inner">
+            <div class="modal-head">
+                <h2>Request Project Details</h2><button class="modal-close" data-project-modal-close
+                    aria-label="Close">×</button>
+            </div>
+            <form id="project-enquiry-form" class="form-grid"><input type="hidden" name="project"><label>Name<input
+                        name="name" required></label><label>Mobile<input name="mobile" required inputmode="tel"
+                        pattern="[0-9 +()-]{8,15}"></label><label>Email<input name="email"
+                        type="email"></label><label>Preferred Location<input name="location"></label><label>Budget<input
+                        name="budget"></label><label>Property Type<input name="type"></label><label
+                    class="full">Message<textarea name="message"></textarea></label><button
+                    class="btn btn-dark full">Request Details</button>
+                <p class="form-status full" role="status"></p>
+            </form>
+        </div>
+    </dialog>
+</body>
+
+</html>

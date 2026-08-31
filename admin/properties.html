@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Properties | Landline Properties Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+  <div id="sidebar-mount"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <h1>Properties</h1>
+      </div>
+      <a href="add-property.html" class="btn btn-primary">+ Add Property</a>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <input type="text" id="search-input" placeholder="Search by title..." style="flex:1;min-width:200px;">
+          <select id="status-filter">
+            <option value="">All Statuses</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+            <option value="pending">Pending Review</option>
+            <option value="sold">Sold</option>
+            <option value="rented">Rented</option>
+            <option value="unpublished">Unpublished</option>
+          </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Image</th><th>Title</th><th>City</th><th>Price</th><th>Type</th><th>Status</th><th>Flags</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="8" class="empty-state">Loading properties...</td></tr>
+          </tbody>
+        </table>
+
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin-core.js"></script>
+<script>
+requireAuth();
+renderShell('properties.html');
+
+let currentPage = 1;
+let searchTimer = null;
+const initialStatus = new URLSearchParams(window.location.search).get('status') || '';
+if ([...document.getElementById('status-filter').options].some(option => option.value === initialStatus)) {
+  document.getElementById('status-filter').value = initialStatus;
+}
+
+function badge(status) { return `<span class="badge ${escapeHtml(status || 'draft').toLowerCase()}">${escapeHtml(status || '-')}</span>`; }
+
+async function loadProperties(page = 1) {
+  currentPage = page;
+  const q = document.getElementById('search-input').value.trim();
+  const status = document.getElementById('status-filter').value;
+  const params = new URLSearchParams({ page, limit: 15 });
+  if (q) params.set('q', q);
+  if (status) params.set('status', status);
+
+  document.getElementById('table-body').innerHTML = `<tr><td colspan="8" class="empty-state">Loading...</td></tr>`;
+
+  try {
+    const res = await apiRequest(`/admin/properties?${params.toString()}`);
+    renderTable(res.data);
+    renderPagination(res.pagination);
+  } catch (err) {
+    toast(err.message, 'error');
+    document.getElementById('table-body').innerHTML = `<tr><td colspan="8" class="empty-state">Failed to load properties.</td></tr>`;
+  }
+}
+
+function renderTable(rows) {
+  const body = document.getElementById('table-body');
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="8" class="empty-state">No properties found.</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(p => `
+    <tr data-id="${p.id}">
+      <td data-label="Image"><img class="table-thumb" src="${p.cover_image ? (window.LANDLINE_API_ORIGIN || window.location.origin) + p.cover_image : '../image/Landline.png'}" alt="${escapeHtml(p.title)}"></td>
+      <td data-label="Title">${escapeHtml(p.title)}</td>
+      <td data-label="City">${escapeHtml(p.city)}</td>
+      <td data-label="Price">${formatPrice(p.price)}</td>
+      <td data-label="Type">${escapeHtml(p.property_type)}</td>
+      <td data-label="Status">${badge(p.status)}</td>
+      <td data-label="Flags">${p.featured ? '<span class="badge gold">Featured</span>' : ''} ${p.verified ? '<span class="badge published">Verified</span>' : ''}</td>
+      <td data-label="Actions">
+        <div class="table-actions">
+          <a class="btn btn-sm btn-outline" href="edit-property.html?id=${p.id}">Edit</a>
+          <button class="btn btn-sm btn-outline" data-action="feature" data-id="${p.id}" data-value="${p.featured ? 0 : 1}">${p.featured ? 'Unfeature' : 'Feature'}</button>
+          <button class="btn btn-sm btn-outline" data-action="duplicate" data-id="${p.id}">Duplicate</button>
+          <button class="btn btn-sm btn-outline" data-action="publish" data-id="${p.id}" data-value="${p.status === 'published' ? 'draft' : 'published'}">${p.status === 'published' ? 'Unpublish' : 'Publish'}</button>
+          <button class="btn btn-sm btn-danger" data-action="delete" data-id="${p.id}">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderPagination(p) {
+  const el = document.getElementById('pagination');
+  if (p.totalPages <= 1) { el.innerHTML = ''; return; }
+  let html = '';
+  for (let i = 1; i <= p.totalPages; i++) {
+    html += `<button class="${i === p.page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+  }
+  el.innerHTML = html;
+  el.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => loadProperties(Number(btn.dataset.page))));
+}
+
+document.getElementById('table-body').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+
+  try {
+    if (action === 'delete') {
+      if (!confirm('Delete this property permanently? This cannot be undone.')) return;
+      await apiRequest(`/admin/properties/${id}`, { method: 'DELETE' });
+      toast('Property deleted.');
+    } else if (action === 'duplicate') {
+      await apiRequest(`/admin/properties/${id}/duplicate`, { method: 'POST' });
+      toast('Property duplicated as a draft.');
+    } else if (action === 'feature') {
+      await apiRequest(`/admin/properties/${id}/toggle`, { method: 'PATCH', body: { field: 'featured', value: Number(btn.dataset.value) } });
+      toast('Featured status updated.');
+    } else if (action === 'publish') {
+      await apiRequest(`/admin/properties/${id}/toggle`, { method: 'PATCH', body: { status: btn.dataset.value } });
+      toast('Status updated.');
+    }
+    loadProperties(currentPage);
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+});
+
+document.getElementById('search-input').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadProperties(1), 350);
+});
+document.getElementById('status-filter').addEventListener('change', () => loadProperties(1));
+
+loadProperties();
+</script>
+</body>
+</html>

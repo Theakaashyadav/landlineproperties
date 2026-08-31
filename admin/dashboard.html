@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | Landline Properties Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="css/admin.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div id="sidebar-mount"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <h1>Dashboard</h1>
+      </div>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+
+    <div class="content">
+
+      <div class="stat-grid" id="stat-grid">
+        <!-- filled by JS -->
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head"><h3>Monthly Enquiries</h3></div>
+          <canvas id="enquiry-chart" height="110"></canvas>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Quick Actions</h3></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <a class="btn btn-primary" href="add-property.html">+ Add Property</a>
+            <a class="btn btn-outline" href="properties.html?status=pending">Review Submissions</a>
+            <a class="btn btn-outline" href="leads.html">View Enquiries</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head"><h3>Recent Properties</h3><a href="properties.html" class="btn btn-sm btn-outline">View All</a></div>
+          <table>
+            <thead><tr><th>Title</th><th>City</th><th>Price</th><th>Status</th></tr></thead>
+            <tbody id="recent-properties-body"></tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Recent Leads</h3><a href="leads.html" class="btn btn-sm btn-outline">View All</a></div>
+          <table>
+            <thead><tr><th>Name</th><th>Requirement</th><th>Status</th></tr></thead>
+            <tbody id="recent-leads-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Recent Activity</h3></div>
+        <table>
+          <thead><tr><th>User</th><th>Action</th><th>Entity</th><th>When</th></tr></thead>
+          <tbody id="recent-activity-body"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/admin-core.js"></script>
+<script>
+requireAuth();
+renderShell('dashboard.html');
+
+function statCard(label, value, gold = false) {
+  return `<div class="stat-card"><div class="label">${label}</div><div class="value ${gold ? 'gold' : ''}">${value}</div></div>`;
+}
+function badge(status) { return `<span class="badge ${escapeHtml(status || 'draft').toLowerCase().replace(/\s+/g,'-')}">${escapeHtml(status || '-')}</span>`; }
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+(async () => {
+  try {
+    const { data } = await apiRequest('/admin/dashboard/stats');
+
+    document.getElementById('stat-grid').innerHTML = [
+      statCard('Total Properties', data.totalProperties),
+      statCard('Active Properties', data.activeProperties),
+      statCard('Featured Properties', data.featuredProperties, true),
+      statCard('Pending Review', data.pendingProperties),
+      statCard('Total Leads', data.totalLeads),
+      statCard('New Leads', data.newLeads, true),
+      statCard('Site Visit Requests', data.siteVisitRequests)
+    ].join('');
+
+    document.getElementById('recent-properties-body').innerHTML = data.recentProperties.length
+      ? data.recentProperties.map(p => `<tr>
+          <td data-label="Title">${escapeHtml(p.title)}</td>
+          <td data-label="City">${escapeHtml(p.city)}</td>
+          <td data-label="Price">${formatPrice(p.price)}</td>
+          <td data-label="Status">${badge(p.status)}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="4" class="empty-state">No properties yet.</td></tr>`;
+
+    document.getElementById('recent-leads-body').innerHTML = data.recentLeads.length
+      ? data.recentLeads.map(l => `<tr>
+          <td data-label="Name">${escapeHtml(l.name)}</td>
+          <td data-label="Requirement">${escapeHtml(l.requirement || '-')}</td>
+          <td data-label="Status">${badge(l.status)}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="3" class="empty-state">No leads yet.</td></tr>`;
+
+    document.getElementById('recent-activity-body').innerHTML = data.recentActivity.length
+      ? data.recentActivity.map(a => `<tr>
+          <td data-label="User">${escapeHtml(a.user_name || 'System')}</td>
+          <td data-label="Action">${escapeHtml(a.action)}</td>
+          <td data-label="Entity">${escapeHtml(a.entity || '-')}</td>
+          <td data-label="When">${timeAgo(a.created_at)}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="4" class="empty-state">No activity yet.</td></tr>`;
+
+    const trend = data.enquiryTrend || [];
+    new Chart(document.getElementById('enquiry-chart'), {
+      type: 'bar',
+      data: {
+        labels: trend.map(t => t.month),
+        datasets: [{ label: 'Enquiries', data: trend.map(t => t.count), backgroundColor: '#C89B3C', borderRadius: 4 }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+  } catch (err) {
+    toast(err.message || 'Failed to load dashboard.', 'error');
+  }
+})();
+</script>
+</body>
+</html>
