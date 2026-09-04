@@ -1,11 +1,11 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 
 const { pool, testConnection } = require('./config/db');
 const { errorHandler } = require('./middleware/errorHandler');
@@ -176,13 +176,22 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-if (require.main === module) {
-  (async () => {
-    await testConnection();
-    app.listen(PORT, () => {
-      console.log(`Landline Properties API running on http://localhost:${PORT}`);
-    });
-  })();
+let runningServer;
+
+function startServer() {
+  if (runningServer) return runningServer;
+
+  // Hostinger loads the entry module through Passenger instead of executing it
+  // as `require.main`. Listen immediately so static pages remain available even
+  // while the database is unavailable; /api/health still reports DB failures.
+  runningServer = app.listen(PORT, () => {
+    console.log(`Landline Properties API running on http://localhost:${PORT}`);
+  });
+  testConnection({ exitOnFailure: false }).catch(() => {});
+  return runningServer;
 }
 
+if (require.main === module || process.env.LSNODE_SOCKET) startServer();
+
+app.startServer = startServer;
 module.exports = app;

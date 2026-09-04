@@ -4,7 +4,7 @@ const { spawnSync } = require('child_process');
 const vm = require('vm');
 
 const projectRoot = path.resolve(__dirname, '..', '..');
-const ignored = new Set(['node_modules', '.git']);
+const ignored = new Set(['node_modules', '.git', '.runtime', '.deploy']);
 const required = [
   'index.html', 'featured-properties.html', 'rent.html', 'property-details.html',
   'contact.html', 'list-property.html', 'admin/login.html', 'admin/dashboard.html',
