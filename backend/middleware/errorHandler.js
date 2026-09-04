@@ -1,3 +1,5 @@
+const { isProductionRuntime } = require('../utils/runtime');
+
 // Catches errors from any route (including async ones wrapped in asyncHandler)
 // and returns a consistent JSON shape without leaking internals in production.
 function errorHandler(err, req, res, next) {
@@ -35,7 +37,7 @@ function errorHandler(err, req, res, next) {
     return res.status(503).json({ success: false, message: 'Database temporarily unavailable.' });
   }
 
-  const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.LSNODE_SOCKET);
+  const isProduction = isProductionRuntime();
   const message = status === 500 && isProduction
     ? 'Something went wrong. Please try again.'
     : err.message || 'Server error.';

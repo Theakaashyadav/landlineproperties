@@ -7,6 +7,7 @@ const { databaseName } = require('../config/db');
 const models = require('../models');
 const { generateUniqueSlug } = require('../utils/slugify');
 const { cleanDocument, escapeRegex, numericId } = require('../utils/documents');
+const { isHostingerRuntime, isProductionRuntime } = require('../utils/runtime');
 
 test('MongoDB is isolated in the configured application database', () => {
   assert.equal(databaseName(), 'landline_properties');
@@ -75,4 +76,17 @@ test('MongoDB document helpers safely normalize API values', () => {
   assert.equal(escapeRegex('a+b?'), 'a\\+b\\?');
   assert.equal(numericId('12'), 12);
   assert.equal(numericId('bad'), null);
+});
+
+test('Hostinger injected variables enable production security defaults', () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousConsoleLog = process.env.LSNODE_CONSOLE_LOG;
+  process.env.NODE_ENV = 'development';
+  process.env.LSNODE_CONSOLE_LOG = 'console.log';
+  assert.equal(isHostingerRuntime(), true);
+  assert.equal(isProductionRuntime(), true);
+  if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+  else process.env.NODE_ENV = previousNodeEnv;
+  if (previousConsoleLog === undefined) delete process.env.LSNODE_CONSOLE_LOG;
+  else process.env.LSNODE_CONSOLE_LOG = previousConsoleLog;
 });

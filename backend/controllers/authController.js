@@ -4,10 +4,11 @@ const { User } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { requestToken } = require('../middleware/auth');
 const { logActivity } = require('../utils/activityLog');
+const { isProductionRuntime } = require('../utils/runtime');
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production' || Boolean(process.env.LSNODE_SOCKET),
+  secure: isProductionRuntime(),
   sameSite: 'lax',
   path: '/',
   maxAge: 8 * 60 * 60 * 1000 // 8 hours
@@ -67,7 +68,7 @@ const logout = asyncHandler(async (req, res) => {
   }
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production' || Boolean(process.env.LSNODE_SOCKET),
+    secure: isProductionRuntime(),
     sameSite: 'lax',
     path: '/'
   });

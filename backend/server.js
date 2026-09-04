@@ -10,6 +10,7 @@ const rateLimit = require('express-rate-limit');
 const database = require('./config/db');
 const { Property, Project } = require('./models');
 const { errorHandler } = require('./middleware/errorHandler');
+const { isHostingerRuntime, isProductionRuntime } = require('./utils/runtime');
 
 const authRoutes = require('./routes/authRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
@@ -23,8 +24,8 @@ const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
 const frontendDir = path.resolve(__dirname, '..');
-const hostingerRuntime = Boolean(process.env.LSNODE_SOCKET);
-const isProduction = process.env.NODE_ENV === 'production' || hostingerRuntime;
+const hostingerRuntime = isHostingerRuntime();
+const isProduction = isProductionRuntime();
 const productionAssetMaxAge = isProduction ? '7d' : 0;
 if (isProduction) app.set('trust proxy', 1);
 
