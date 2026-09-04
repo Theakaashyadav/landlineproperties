@@ -8,7 +8,7 @@ const ignored = new Set(['node_modules', '.git', '.runtime', '.deploy']);
 const required = [
   'index.html', 'featured-properties.html', 'rent.html', 'property-details.html',
   'contact.html', 'list-property.html', 'admin/login.html', 'admin/dashboard.html',
-  'database/landline.sql', 'backend/.env.example'
+  'database/mongodb/README.md', 'backend/models/index.js', 'backend/.env.example'
 ];
 const failures = [];
 

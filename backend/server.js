@@ -7,7 +7,8 @@ const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
-const { pool, testConnection } = require('./config/db');
+const database = require('./config/db');
+const { Property, Project } = require('./models');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/authRoutes');
@@ -89,13 +90,25 @@ app.use('/api', rateLimit({
   legacyHeaders: false
 }));
 
+// Keep the public website available during a database outage, but make every
+// API request wait for the shared MongoDB connection (and retry after a failed
+// initial startup connection) before a controller accesses a model.
+app.use('/api', (req, res, next) => {
+  database.connectDatabase().then(() => next()).catch((cause) => {
+    const error = new Error('Database temporarily unavailable.');
+    error.statusCode = 503;
+    error.cause = cause;
+    next(error);
+  });
+});
+
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, process.env.UPLOAD_DIR || 'uploads')));
 
 // ---- Routes ----
 app.get('/api/health', async (req, res, next) => {
   try {
-    await testConnection({ exitOnFailure: false, quiet: true });
+    await database.testConnection({ exitOnFailure: false, quiet: true });
     res.json({ success: true, message: 'API and database are running.' });
   } catch (error) {
     error.statusCode = 503;
@@ -126,15 +139,18 @@ app.get('/robots.txt', (req, res) => {
 });
 app.get('/sitemap.xml', async (req, res, next) => {
   try {
-  const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-  const [properties] = await pool.query('SELECT slug, updated_at FROM properties WHERE status = ? ORDER BY updated_at DESC', ['published']);
-  const [projects] = await pool.query('SELECT slug, updated_at FROM projects WHERE status = ? ORDER BY updated_at DESC', ['published']);
-  const escapeXml = value => String(value).replace(/[<>&'\"]/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '\"': '&quot;' }[char]));
-  const staticUrls = publicPages.map(page => `<url><loc>${escapeXml(`${siteUrl}/${page}`)}</loc></url>`);
-  const propertyUrls = properties.map(property => `<url><loc>${escapeXml(`${siteUrl}/property-details.html?slug=${encodeURIComponent(property.slug)}`)}</loc><lastmod>${new Date(property.updated_at).toISOString()}</lastmod></url>`);
-  const projectUrls = projects.map(project => `<url><loc>${escapeXml(`${siteUrl}/project-details.html?slug=${encodeURIComponent(project.slug)}`)}</loc><lastmod>${new Date(project.updated_at).toISOString()}</lastmod></url>`);
-  const urls = [...staticUrls, ...propertyUrls, ...projectUrls].join('');
-  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
+    await database.connectDatabase();
+    const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    const [properties, projects] = await Promise.all([
+      Property.find({ status: 'published' }).select('slug updated_at -_id').sort({ updated_at: -1 }).lean(),
+      Project.find({ status: 'published' }).select('slug updated_at -_id').sort({ updated_at: -1 }).lean()
+    ]);
+    const escapeXml = value => String(value).replace(/[<>&'\"]/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '\"': '&quot;' }[char]));
+    const staticUrls = publicPages.map(page => `<url><loc>${escapeXml(`${siteUrl}/${page}`)}</loc></url>`);
+    const propertyUrls = properties.map(property => `<url><loc>${escapeXml(`${siteUrl}/property-details.html?slug=${encodeURIComponent(property.slug)}`)}</loc><lastmod>${new Date(property.updated_at).toISOString()}</lastmod></url>`);
+    const projectUrls = projects.map(project => `<url><loc>${escapeXml(`${siteUrl}/project-details.html?slug=${encodeURIComponent(project.slug)}`)}</loc><lastmod>${new Date(project.updated_at).toISOString()}</lastmod></url>`);
+    const urls = [...staticUrls, ...propertyUrls, ...projectUrls].join('');
+    res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
   } catch (error) {
     next(error);
   }
@@ -187,7 +203,7 @@ function startServer() {
   runningServer = app.listen(PORT, () => {
     console.log(`Landline Properties API running on http://localhost:${PORT}`);
   });
-  testConnection({ exitOnFailure: false }).catch(() => {});
+  database.testConnection({ exitOnFailure: false }).catch(() => {});
   return runningServer;
 }
 

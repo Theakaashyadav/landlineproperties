@@ -1,4 +1,4 @@
-const { pool } = require('../config/db');
+const { Property } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { generateUniqueSlug } = require('../utils/slugify');
 
@@ -25,28 +25,31 @@ const submitListing = asyncHandler(async (req, res) => {
   const titleSuffix = ' (Owner Submitted)';
   const descriptiveTitle = `${normalizedType} in ${normalizedLocality ? `${normalizedLocality}, ` : ''}${normalizedCity}`;
   const title = `${descriptiveTitle.slice(0, 255 - titleSuffix.length).trim()}${titleSuffix}`;
-  const slug = await generateUniqueSlug(pool, 'properties', title);
+  const slug = await generateUniqueSlug(Property, title);
   const hasPrice = price !== undefined && price !== null && price !== '';
   const normalizedPrice = hasPrice ? Number(price) : null;
 
-  const [result] = await pool.query(
-    `INSERT INTO properties
-      (title, slug, property_type, purpose, price, price_label, city, locality, description, status,
-       is_user_submitted, submitted_by_name, submitted_by_phone, submitted_by_email)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 1, ?, ?, ?)`,
-    [
-      title, slug, normalizedType, purpose, normalizedPrice,
-      hasPrice ? null : 'Price on request', normalizedCity, normalizedLocality || null,
-      description ? String(description).trim() : null, String(name).trim().slice(0, 150),
-      phoneClean.slice(0, 20),
-      email ? String(email).trim().slice(0, 190) : null
-    ]
-  );
+  const property = await Property.create({
+    title,
+    slug,
+    property_type: normalizedType,
+    purpose,
+    price: normalizedPrice,
+    price_label: hasPrice ? null : 'Price on request',
+    city: normalizedCity,
+    locality: normalizedLocality || null,
+    description: description ? String(description).trim() : null,
+    status: 'pending',
+    is_user_submitted: 1,
+    submitted_by_name: String(name).trim().slice(0, 150),
+    submitted_by_phone: phoneClean.slice(0, 20),
+    submitted_by_email: email ? String(email).trim().slice(0, 190) : null
+  });
 
   res.status(201).json({
     success: true,
     message: 'Thank you! Your property details have been submitted. Our team will review and contact you shortly.',
-    data: { id: result.insertId }
+    data: { id: property.id }
   });
 });
 

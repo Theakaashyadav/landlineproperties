@@ -1,38 +1,42 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const bcrypt = require('bcryptjs');
-const { pool } = require('../config/db');
+const { connectDatabase, disconnectDatabase, databaseName } = require('../config/db');
+const { User } = require('../models');
 
-(async () => {
+async function seedAdmin() {
   const email = process.env.SEED_ADMIN_EMAIL;
   const password = process.env.SEED_ADMIN_PASSWORD;
   const name = process.env.SEED_ADMIN_NAME || 'Admin';
 
   if (!email || !password || password === 'change_me_before_running_seed') {
-    console.error('Set SEED_ADMIN_EMAIL and a real SEED_ADMIN_PASSWORD in .env before running this script.');
-    process.exit(1);
+    throw new Error('Set SEED_ADMIN_EMAIL and a real SEED_ADMIN_PASSWORD in .env before running this script.');
   }
   if (password.length < 8) {
-    console.error('SEED_ADMIN_PASSWORD must be at least 8 characters.');
-    process.exit(1);
+    throw new Error('SEED_ADMIN_PASSWORD must be at least 8 characters.');
   }
 
-  try {
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
-    if (existing.length) {
-      console.log('An admin with this email already exists. No changes made.');
-      process.exit(0);
-    }
-
-    const hash = await bcrypt.hash(password, 12);
-    await pool.query(
-      `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'super_admin', 1)`,
-      [name, email, hash]
-    );
-    console.log(`Admin account created for ${email}. You can now log in at /admin/login.html`);
-    process.exit(0);
-  } catch (err) {
-    console.error('Failed to seed admin:', err.message);
-    process.exit(1);
+  await connectDatabase();
+  const normalizedEmail = email.trim().toLowerCase();
+  if (await User.exists({ email: normalizedEmail })) {
+    console.log('An admin with this email already exists. No changes made.');
+    return;
   }
-})();
+
+  const hash = await bcrypt.hash(password, 12);
+  await User.create({
+    name: String(name).trim().slice(0, 120),
+    email: normalizedEmail,
+    password_hash: hash,
+    role: 'super_admin',
+    is_active: 1
+  });
+  console.log(`Admin account created in ${databaseName()} for ${normalizedEmail}. You can now log in at /admin/login.html`);
+}
+
+seedAdmin()
+  .catch((error) => {
+    console.error('Failed to seed admin:', error.message);
+    process.exitCode = 1;
+  })
+  .finally(() => disconnectDatabase().catch(() => {}));

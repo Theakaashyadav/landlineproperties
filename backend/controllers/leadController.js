@@ -1,6 +1,7 @@
-const { pool } = require('../config/db');
+const { Lead, LeadNote, Property, Project, Broker } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { logActivity } = require('../utils/activityLog');
+const { cleanDocument, escapeRegex, numericId } = require('../utils/documents');
 
 // POST /api/leads  (public — from contact form, enquiry form, property enquiry)
 const createLead = asyncHandler(async (req, res) => {
@@ -17,52 +18,52 @@ const createLead = asyncHandler(async (req, res) => {
   }
 
   if (property_id) {
-    const [property] = await pool.query('SELECT id FROM properties WHERE id = ? AND status = ? LIMIT 1', [property_id, 'published']);
-    if (property.length === 0) throw new ApiError(400, 'The selected property is no longer available.');
+    const propertyId = numericId(property_id);
+    if (!propertyId || !await Property.exists({ id: propertyId, status: 'published' })) {
+      throw new ApiError(400, 'The selected property is no longer available.');
+    }
   }
 
   if (projectId) {
-    const [project] = await pool.query('SELECT id FROM projects WHERE id = ? AND status = ? LIMIT 1', [projectId, 'published']);
-    if (project.length === 0) throw new ApiError(400, 'The selected project is no longer available.');
+    const normalizedProjectId = numericId(projectId);
+    if (!normalizedProjectId || !await Project.exists({ id: normalizedProjectId, status: 'published' })) {
+      throw new ApiError(400, 'The selected project is no longer available.');
+    }
   }
 
-  const [result] = await pool.query(
-    `INSERT INTO leads
-      (name, phone, email, requirement, property_id, project_id, inquiry_type, location, budget, message, source)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      String(name).trim().slice(0, 150),
-      phoneClean.slice(0, 20),
-      email ? String(email).trim().slice(0, 190) : null,
-      requirement ? String(requirement).trim().slice(0, 100) : null,
-      property_id ? Number(property_id) : null,
-      projectId ? Number(projectId) : null,
-      inquiryType ? String(inquiryType).trim().slice(0, 100) : null,
-      location ? String(location).trim().slice(0, 150) : null,
-      budget ? String(budget).trim().slice(0, 100) : null,
-      message ? String(message).trim().slice(0, 2000) : null,
-      source ? String(source).trim() : 'website'
-    ]
-  );
+  const lead = await Lead.create({
+    name: String(name).trim().slice(0, 150),
+    phone: phoneClean.slice(0, 20),
+    email: email ? String(email).trim().slice(0, 190) : null,
+    requirement: requirement ? String(requirement).trim().slice(0, 100) : null,
+    property_id: property_id ? Number(property_id) : null,
+    project_id: projectId ? Number(projectId) : null,
+    inquiry_type: inquiryType ? String(inquiryType).trim().slice(0, 100) : null,
+    location: location ? String(location).trim().slice(0, 150) : null,
+    budget: budget ? String(budget).trim().slice(0, 100) : null,
+    message: message ? String(message).trim().slice(0, 2000) : null,
+    source: source ? String(source).trim().slice(0, 100) : 'website'
+  });
 
   res.status(201).json({
     success: true,
     message: 'Thank you. Our property expert will contact you shortly.',
-    data: { id: result.insertId }
+    data: { id: lead.id }
   });
 });
 
 // GET /api/admin/leads  (admin)
 const listLeads = asyncHandler(async (req, res) => {
   const { status, q, page = 1, limit = 20 } = req.query;
-  const where = [];
-  const params = [];
+  const filter = {};
   const allowedStatuses = ['New','Contacted','Follow-up','Site Visit','Interested','Converted','Not Interested','Closed'];
   if (status && !allowedStatuses.includes(status)) throw new ApiError(400, 'Invalid lead status.');
   if (q && String(q).length > 150) throw new ApiError(400, 'Search query is too long.');
-  if (status) { where.push('l.status = ?'); params.push(status); }
-  if (q) { where.push('(l.name LIKE ? OR l.phone LIKE ? OR l.email LIKE ?)'); params.push(`%${q}%`, `%${q}%`, `%${q}%`); }
-  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  if (status) filter.status = status;
+  if (q) {
+    const pattern = { $regex: escapeRegex(q), $options: 'i' };
+    filter.$or = [{ name: pattern }, { phone: pattern }, { email: pattern }];
+  }
 
   if (!/^\d+$/.test(String(page)) || Number(page) < 1) throw new ApiError(400, 'page must be a positive integer.');
   if (!/^\d+$/.test(String(limit)) || Number(limit) < 1 || Number(limit) > 100) throw new ApiError(400, 'limit must be between 1 and 100.');
@@ -70,21 +71,32 @@ const listLeads = asyncHandler(async (req, res) => {
   const perPage = Number(limit);
   const offset = (pageNum - 1) * perPage;
 
-  const [rows] = await pool.query(
-    `SELECT l.*, p.title AS property_title, pr.name AS project_name, b.name AS broker_name
-     FROM leads l
-     LEFT JOIN properties p ON p.id = l.property_id
-     LEFT JOIN projects pr ON pr.id = l.project_id
-     LEFT JOIN brokers b ON b.id = l.assigned_broker
-     ${whereSql} ORDER BY l.created_at DESC LIMIT ? OFFSET ?`,
-    [...params, perPage, offset]
-  );
-  const [countRows] = await pool.query(`SELECT COUNT(*) AS total FROM leads l ${whereSql}`, params);
+  const [leads, total] = await Promise.all([
+    Lead.find(filter).sort({ created_at: -1 }).skip(offset).limit(perPage).lean(),
+    Lead.countDocuments(filter)
+  ]);
+  const propertyIds = [...new Set(leads.map((lead) => lead.property_id).filter(Boolean))];
+  const projectIds = [...new Set(leads.map((lead) => lead.project_id).filter(Boolean))];
+  const brokerIds = [...new Set(leads.map((lead) => lead.assigned_broker).filter(Boolean))];
+  const [properties, projects, brokers] = await Promise.all([
+    propertyIds.length ? Property.find({ id: { $in: propertyIds } }).select('id title -_id').lean() : [],
+    projectIds.length ? Project.find({ id: { $in: projectIds } }).select('id name -_id').lean() : [],
+    brokerIds.length ? Broker.find({ id: { $in: brokerIds } }).select('id name -_id').lean() : []
+  ]);
+  const propertyNames = new Map(properties.map((property) => [property.id, property.title]));
+  const projectNames = new Map(projects.map((project) => [project.id, project.name]));
+  const brokerNames = new Map(brokers.map((broker) => [broker.id, broker.name]));
+  const rows = leads.map((lead) => ({
+    ...cleanDocument(lead),
+    property_title: propertyNames.get(lead.property_id) || null,
+    project_name: projectNames.get(lead.project_id) || null,
+    broker_name: brokerNames.get(lead.assigned_broker) || null
+  }));
 
   res.json({
     success: true,
     data: rows,
-    pagination: { page: pageNum, limit: perPage, total: countRows[0].total, totalPages: Math.ceil(countRows[0].total / perPage) }
+    pagination: { page: pageNum, limit: perPage, total, totalPages: Math.ceil(total / perPage) }
   });
 });
 
@@ -101,6 +113,9 @@ const updateLead = asyncHandler(async (req, res) => {
       throw new ApiError(400, 'Invalid broker selection.');
     }
     fields.assigned_broker = assigned_broker ? Number(assigned_broker) : null;
+    if (fields.assigned_broker && !await Broker.exists({ id: fields.assigned_broker })) {
+      throw new ApiError(400, 'The selected broker does not exist.');
+    }
   }
   if (follow_up_date !== undefined) {
     if (follow_up_date !== null && follow_up_date !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(String(follow_up_date))) {
@@ -117,11 +132,14 @@ const updateLead = asyncHandler(async (req, res) => {
 
   if (Object.keys(fields).length === 0) throw new ApiError(400, 'No valid fields to update.');
 
-  const setSql = Object.keys(fields).map((k) => `${k} = ?`).join(', ');
-  const [result] = await pool.query(`UPDATE leads SET ${setSql} WHERE id = ?`, [...Object.values(fields), id]);
-  if (result.affectedRows === 0) throw new ApiError(404, 'Lead not found.');
+  const lead = await Lead.findOneAndUpdate(
+    { id: Number(id) },
+    { $set: fields },
+    { returnDocument: 'after', runValidators: true }
+  );
+  if (!lead) throw new ApiError(404, 'Lead not found.');
 
-  await logActivity(pool, { userId: req.user.id, action: 'Lead Status Changed', entity: 'lead', entityId: id, ip: req.ip });
+  await logActivity({ userId: req.user.id, action: 'Lead Status Changed', entity: 'lead', entityId: Number(id), ip: req.ip });
   res.json({ success: true, message: 'Lead updated.' });
 });
 
@@ -130,14 +148,18 @@ const addNote = asyncHandler(async (req, res) => {
   const { note } = req.body;
   if (!note || !note.trim()) throw new ApiError(400, 'Note text is required.');
   if (note.trim().length > 5000) throw new ApiError(400, 'Note text must not exceed 5000 characters.');
-  await pool.query('INSERT INTO lead_notes (lead_id, note, created_by) VALUES (?, ?, ?)', [req.params.id, note.trim(), req.user.id]);
+  const leadId = numericId(req.params.id);
+  if (!leadId || !await Lead.exists({ id: leadId })) throw new ApiError(404, 'Lead not found.');
+  await LeadNote.create({ lead_id: leadId, note: note.trim(), created_by: req.user.id });
   res.status(201).json({ success: true, message: 'Note added.' });
 });
 
 const deleteLead = asyncHandler(async (req, res) => {
-  const [result] = await pool.query('DELETE FROM leads WHERE id = ?', [req.params.id]);
-  if (result.affectedRows === 0) throw new ApiError(404, 'Lead not found.');
-  await logActivity(pool, { userId: req.user.id, action: 'Lead Deleted', entity: 'lead', entityId: req.params.id, ip: req.ip });
+  const id = Number(req.params.id);
+  const result = await Lead.deleteOne({ id });
+  if (result.deletedCount === 0) throw new ApiError(404, 'Lead not found.');
+  await LeadNote.deleteMany({ lead_id: id });
+  await logActivity({ userId: req.user.id, action: 'Lead Deleted', entity: 'lead', entityId: id, ip: req.ip });
   res.json({ success: true, message: 'Lead deleted.' });
 });
 

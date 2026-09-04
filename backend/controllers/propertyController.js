@@ -1,9 +1,10 @@
 const path = require('path');
 const fs = require('fs');
-const { pool } = require('../config/db');
+const { Property, PropertyImage, Broker, Location, Lead } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { generateUniqueSlug } = require('../utils/slugify');
 const { logActivity } = require('../utils/activityLog');
+const { cleanDocument, escapeRegex, numericId } = require('../utils/documents');
 const uploadsRoot = path.resolve(__dirname, '..', process.env.UPLOAD_DIR || 'uploads');
 
 function uploadedFilePath(imagePath) {
@@ -56,32 +57,31 @@ const PUBLIC_PROPERTY_KEYS = [
   'broker_phone', 'broker_photo', 'broker_slug'
 ];
 
+const PUBLIC_LIST_SELECT = [
+  'id', 'title', 'slug', 'property_type', 'purpose', 'price', 'price_label',
+  'city', 'locality', 'sector', 'bhk', 'bathrooms', 'area', 'area_unit',
+  'property_status', 'furnishing', 'short_description', 'featured', 'verified',
+  'new_launch', 'status', 'created_at', 'updated_at'
+].join(' ');
+
 function toPublicProperty(row) {
   return Object.fromEntries(PUBLIC_PROPERTY_KEYS
     .filter(key => Object.prototype.hasOwnProperty.call(row, key))
     .map(key => [key, row[key]]));
 }
 
-const PUBLIC_LIST_FIELDS = `
-  p.id, p.title, p.slug, p.property_type, p.purpose, p.price, p.price_label,
-  p.city, p.locality, p.sector, p.bhk, p.bathrooms, p.area, p.area_unit,
-  p.property_status, p.furnishing, p.short_description, p.featured, p.verified,
-  p.new_launch, p.status, p.created_at, p.updated_at,
-  (SELECT image_path FROM property_images pi WHERE pi.property_id = p.id
-     ORDER BY pi.is_featured DESC, pi.sort_order ASC LIMIT 1) AS cover_image
-`;
+async function addCoverImages(properties) {
+  const ids = properties.map((property) => property.id);
+  if (!ids.length) return properties.map(cleanDocument);
 
-const PUBLIC_DETAIL_FIELDS = `
-  p.id, p.title, p.slug, p.property_type, p.purpose, p.price, p.price_label,
-  p.city, p.locality, p.sector, p.bhk, p.bathrooms, p.area, p.area_unit,
-  p.property_status, p.possession_status, p.description, p.short_description,
-  p.amenities, p.developer, p.rera_number, p.property_facing, p.floor,
-  p.total_floors, p.parking, p.furnishing, p.year_built, p.featured,
-  p.verified, p.new_launch, p.status, p.seo_title, p.seo_description,
-  p.canonical_url, p.og_image, p.created_at, p.updated_at,
-  b.name AS broker_name, b.phone AS broker_phone, b.photo AS broker_photo,
-  b.slug AS broker_slug
-`;
+  const images = await PropertyImage.find({ property_id: { $in: ids } })
+    .select('property_id image_path is_featured sort_order -_id')
+    .sort({ is_featured: -1, sort_order: 1 })
+    .lean();
+  const covers = new Map();
+  for (const image of images) if (!covers.has(image.property_id)) covers.set(image.property_id, image.image_path);
+  return properties.map((property) => ({ ...cleanDocument(property), cover_image: covers.get(property.id) || null }));
+}
 
 function optionalNumber(value, name, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
   if (value === undefined || value === null || value === '') return null;
@@ -112,8 +112,7 @@ const listProperties = asyncHandler(async (req, res) => {
     sort = 'newest', page = 1, limit = 12
   } = req.query;
 
-  const where = ['p.status = ?'];
-  const params = ['published'];
+  const filter = { status: 'published' };
 
   const allowedPurposes = ['Buy', 'Rent', 'Commercial'];
   const allowedTypes = ['Apartment', 'Villa', 'Plot', 'Independent House', 'Builder Floor', 'Commercial', 'Office', 'Shop', 'Warehouse', 'Land'];
@@ -135,28 +134,40 @@ const listProperties = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'min_price cannot be greater than max_price.');
   }
 
-  if (purpose) { where.push('p.purpose = ?'); params.push(purpose); }
-  if (city) { where.push('p.city = ?'); params.push(city); }
+  if (purpose) filter.purpose = purpose;
+  if (city) filter.city = city;
   if (location) {
     const normalizedLocation = String(location).trim().replace(/-/g, ' ');
-    where.push('(p.city LIKE ? OR p.locality LIKE ? OR p.sector LIKE ?)');
-    params.push(`%${normalizedLocation}%`, `%${normalizedLocation}%`, `%${normalizedLocation}%`);
+    const pattern = { $regex: escapeRegex(normalizedLocation), $options: 'i' };
+    filter.$or = [{ city: pattern }, { locality: pattern }, { sector: pattern }];
   }
-  if (type) { where.push('p.property_type = ?'); params.push(type); }
-  if (bhk) { where.push('p.bhk = ?'); params.push(bhk); }
-  if (furnishing) { where.push('p.furnishing = ?'); params.push(furnishing); }
-  if (property_status) { where.push('p.property_status = ?'); params.push(property_status); }
-  if (minArea !== null) { where.push('p.area >= ?'); params.push(minArea); }
-  if (featured === 'true') { where.push('p.featured = 1'); }
-  if (new_launch === 'true') { where.push('p.new_launch = 1'); }
-  if (minPrice !== null) { where.push('p.price >= ?'); params.push(minPrice); }
-  if (maxPrice !== null) { where.push('p.price <= ?'); params.push(maxPrice); }
-  if (q) { where.push('MATCH(p.title, p.locality, p.description) AGAINST (? IN NATURAL LANGUAGE MODE)'); params.push(q); }
+  if (type) filter.property_type = type;
+  if (bhk) filter.bhk = bhk;
+  if (furnishing) filter.furnishing = furnishing;
+  if (property_status) filter.property_status = property_status;
+  if (minArea !== null) filter.area = { $gte: minArea };
+  if (featured === 'true') filter.featured = 1;
+  if (new_launch === 'true') filter.new_launch = 1;
+  if (minPrice !== null || maxPrice !== null) {
+    filter.price = {};
+    if (minPrice !== null) filter.price.$gte = minPrice;
+    if (maxPrice !== null) filter.price.$lte = maxPrice;
+  }
+  if (q) {
+    const search = { $regex: escapeRegex(q), $options: 'i' };
+    const clauses = [{ title: search }, { locality: search }, { description: search }];
+    if (filter.$or) {
+      filter.$and = [{ $or: filter.$or }, { $or: clauses }];
+      delete filter.$or;
+    } else {
+      filter.$or = clauses;
+    }
+  }
 
   const sortMap = {
-    newest: 'p.created_at DESC',
-    price_low: 'p.price ASC',
-    price_high: 'p.price DESC'
+    newest: { created_at: -1 },
+    price_low: { price: 1 },
+    price_high: { price: -1 }
   };
   const orderBy = sortMap[sort] || sortMap.newest;
 
@@ -164,22 +175,15 @@ const listProperties = asyncHandler(async (req, res) => {
   const perPage = positiveInteger(limit, 'limit', 12, 48);
   const offset = (pageNum - 1) * perPage;
 
-  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-
-  const [rows] = await pool.query(
-    `SELECT ${PUBLIC_LIST_FIELDS} FROM properties p ${whereSql} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
-    [...params, perPage, offset]
-  );
-
-  const [countRows] = await pool.query(
-    `SELECT COUNT(*) AS total FROM properties p ${whereSql}`,
-    params
-  );
-  const total = countRows[0].total;
+  const [rows, total] = await Promise.all([
+    Property.find(filter).select(`${PUBLIC_LIST_SELECT} -_id`).sort(orderBy).skip(offset).limit(perPage).lean(),
+    Property.countDocuments(filter)
+  ]);
+  const properties = await addCoverImages(rows);
 
   res.json({
     success: true,
-    data: rows.map(toPublicProperty),
+    data: properties.map(toPublicProperty),
     pagination: {
       page: pageNum,
       limit: perPage,
@@ -193,30 +197,35 @@ const listProperties = asyncHandler(async (req, res) => {
 // GET /api/properties/:slug  (public — full detail + related)
 // ---------------------------------------------------------------
 const getPropertyBySlug = asyncHandler(async (req, res) => {
-  const [rows] = await pool.query(
-    `SELECT ${PUBLIC_DETAIL_FIELDS}
-     FROM properties p
-     LEFT JOIN brokers b ON b.id = p.broker_id
-     WHERE p.slug = ? AND p.status = ? LIMIT 1`,
-    [req.params.slug, 'published']
-  );
-  if (rows.length === 0) throw new ApiError(404, 'Property not found.');
-  const property = toPublicProperty(rows[0]);
+  const row = await Property.findOne({ slug: req.params.slug, status: 'published' }).lean();
+  if (!row) throw new ApiError(404, 'Property not found.');
 
-  const [images] = await pool.query(
-    'SELECT id, image_path, alt_text, is_featured, sort_order FROM property_images WHERE property_id = ? ORDER BY is_featured DESC, sort_order ASC',
-    [property.id]
-  );
-  property.images = images;
+  const [images, broker] = await Promise.all([
+    PropertyImage.find({ property_id: row.id })
+      .select('id image_path alt_text is_featured sort_order -_id')
+      .sort({ is_featured: -1, sort_order: 1 }).lean(),
+    row.broker_id
+      ? Broker.findOne({ id: row.broker_id }).select('name phone photo slug -_id').lean()
+      : null
+  ]);
+  const property = toPublicProperty({
+    ...cleanDocument(row),
+    cover_image: images[0]?.image_path || null,
+    broker_name: broker?.name || null,
+    broker_phone: broker?.phone || null,
+    broker_photo: broker?.photo || null,
+    broker_slug: broker?.slug || null
+  });
+  property.images = cleanDocument(images);
 
-  pool.query('UPDATE properties SET views = views + 1 WHERE id = ?', [property.id]).catch(() => {});
+  Property.updateOne({ id: property.id }, { $inc: { views: 1 } }).catch(() => {});
 
-  const [related] = await pool.query(
-    `SELECT ${PUBLIC_LIST_FIELDS} FROM properties p
-     WHERE p.status = ? AND p.id != ? AND (p.city = ? OR p.property_type = ?)
-     ORDER BY p.created_at DESC LIMIT 4`,
-    ['published', property.id, property.city, property.property_type]
-  );
+  const relatedRows = await Property.find({
+    status: 'published',
+    id: { $ne: property.id },
+    $or: [{ city: property.city }, { property_type: property.property_type }]
+  }).select(`${PUBLIC_LIST_SELECT} -_id`).sort({ created_at: -1 }).limit(4).lean();
+  const related = await addCoverImages(relatedRows);
 
   res.json({ success: true, data: property, related: related.map(toPublicProperty) });
 });
@@ -226,38 +235,44 @@ const getPropertyBySlug = asyncHandler(async (req, res) => {
 // ---------------------------------------------------------------
 const adminListProperties = asyncHandler(async (req, res) => {
   const { status, page = 1, limit = 20, q } = req.query;
-  const where = [];
-  const params = [];
+  const filter = {};
   if (status && !ALLOWED_STATUSES.includes(status)) throw new ApiError(400, 'Invalid status value.');
   if (q && String(q).length > 150) throw new ApiError(400, 'Search query is too long.');
-  if (status) { where.push('p.status = ?'); params.push(status); }
-  if (q) { where.push('p.title LIKE ?'); params.push(`%${q}%`); }
-  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  if (status) filter.status = status;
+  if (q) filter.title = { $regex: escapeRegex(q), $options: 'i' };
 
   const pageNum = positiveInteger(page, 'page', 1, 1000000);
   const perPage = positiveInteger(limit, 'limit', 20, 100);
   const offset = (pageNum - 1) * perPage;
 
-  const [rows] = await pool.query(
-    `SELECT ${PUBLIC_LIST_FIELDS}, p.is_user_submitted, p.submitted_by_name,
-      p.submitted_by_phone, p.submitted_by_email
-     FROM properties p ${whereSql} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
-    [...params, perPage, offset]
-  );
-  const [countRows] = await pool.query(`SELECT COUNT(*) AS total FROM properties p ${whereSql}`, params);
+  const [rows, total] = await Promise.all([
+    Property.find(filter)
+      .select(`${PUBLIC_LIST_SELECT} is_user_submitted submitted_by_name submitted_by_phone submitted_by_email -_id`)
+      .sort({ created_at: -1 }).skip(offset).limit(perPage).lean(),
+    Property.countDocuments(filter)
+  ]);
+  const properties = await addCoverImages(rows);
+  const data = properties.map((property) => ({
+    ...toPublicProperty(property),
+    is_user_submitted: property.is_user_submitted,
+    submitted_by_name: property.submitted_by_name,
+    submitted_by_phone: property.submitted_by_phone,
+    submitted_by_email: property.submitted_by_email
+  }));
 
   res.json({
     success: true,
-    data: rows,
-    pagination: { page: pageNum, limit: perPage, total: countRows[0].total, totalPages: Math.ceil(countRows[0].total / perPage) }
+    data,
+    pagination: { page: pageNum, limit: perPage, total, totalPages: Math.ceil(total / perPage) }
   });
 });
 
 const adminGetProperty = asyncHandler(async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM properties WHERE id = ? LIMIT 1', [req.params.id]);
-  if (rows.length === 0) throw new ApiError(404, 'Property not found.');
-  const [images] = await pool.query('SELECT * FROM property_images WHERE property_id = ? ORDER BY sort_order ASC', [req.params.id]);
-  res.json({ success: true, data: { ...rows[0], images } });
+  const id = numericId(req.params.id);
+  const property = id ? await Property.findOne({ id }).lean() : null;
+  if (!property) throw new ApiError(404, 'Property not found.');
+  const images = await PropertyImage.find({ property_id: id }).sort({ sort_order: 1 }).lean();
+  res.json({ success: true, data: { ...cleanDocument(property), images: cleanDocument(images) } });
 });
 
 const ALLOWED_FIELDS = [
@@ -275,6 +290,7 @@ const NULLABLE_FIELDS = new Set([
   'canonical_url', 'og_image'
 ]);
 const BOOLEAN_FIELDS = new Set(['featured', 'verified', 'new_launch']);
+const NUMBER_FIELDS = new Set(['price', 'location_id', 'bathrooms', 'area', 'year_built', 'broker_id']);
 
 function pickFields(body) {
   const out = {};
@@ -282,12 +298,27 @@ function pickFields(body) {
     if (body[key] !== undefined) {
       let value = body[key];
       if ((value === '' || value === null) && NULLABLE_FIELDS.has(key)) value = null;
-      if (key === 'amenities' && value !== null && typeof value !== 'string') value = JSON.stringify(value);
+      if (key === 'amenities' && value !== null) {
+        if (typeof value === 'string') {
+          try { value = JSON.parse(value); } catch { value = []; }
+        }
+        value = Array.isArray(value) ? value.map((item) => String(item).trim()).filter(Boolean) : [];
+      }
       if (BOOLEAN_FIELDS.has(key)) value = value === true || value === 1 || value === '1' || value === 'true' ? 1 : 0;
+      if (NUMBER_FIELDS.has(key) && value !== null) value = Number(value);
       out[key] = value;
     }
   }
   return out;
+}
+
+async function validatePropertyReferences(fields) {
+  if (fields.location_id && !await Location.exists({ id: fields.location_id })) {
+    throw new ApiError(400, 'The selected location does not exist.');
+  }
+  if (fields.broker_id && !await Broker.exists({ id: fields.broker_id })) {
+    throw new ApiError(400, 'The selected broker does not exist.');
+  }
 }
 
 // ---------------------------------------------------------------
@@ -300,40 +331,32 @@ const createProperty = asyncHandler(async (req, res) => {
   }
 
   const fields = pickFields(body);
-  fields.slug = await generateUniqueSlug(pool, 'properties', body.title);
+  await validatePropertyReferences(fields);
+  fields.slug = await generateUniqueSlug(Property, body.title);
   fields.created_by = req.user.id;
 
-  const columns = Object.keys(fields);
-  const placeholders = columns.map(() => '?').join(', ');
-  const values = columns.map((c) => fields[c]);
+  const property = await Property.create(fields);
 
-  const [result] = await pool.query(
-    `INSERT INTO properties (${columns.join(', ')}) VALUES (${placeholders})`,
-    values
-  );
-
-  await logActivity(pool, { userId: req.user.id, action: 'Property Added', entity: 'property', entityId: result.insertId, ip: req.ip });
-  res.status(201).json({ success: true, data: { id: result.insertId, slug: fields.slug } });
+  await logActivity({ userId: req.user.id, action: 'Property Added', entity: 'property', entityId: property.id, ip: req.ip });
+  res.status(201).json({ success: true, data: { id: property.id, slug: fields.slug } });
 });
 
 // ---------------------------------------------------------------
 // PUT /api/properties/:id  (admin only)
 // ---------------------------------------------------------------
 const updateProperty = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const [existing] = await pool.query('SELECT id, title FROM properties WHERE id = ?', [id]);
-  if (existing.length === 0) throw new ApiError(404, 'Property not found.');
+  const id = numericId(req.params.id);
+  if (!id || !await Property.exists({ id })) throw new ApiError(404, 'Property not found.');
 
   const fields = pickFields(req.body);
   // Slugs remain stable after publication so title edits do not break indexed
   // URLs and saved links. Duplicate/create operations still generate new slugs.
   if (Object.keys(fields).length === 0) throw new ApiError(400, 'No valid fields to update.');
+  await validatePropertyReferences(fields);
 
-  const setSql = Object.keys(fields).map((k) => `${k} = ?`).join(', ');
-  const values = Object.values(fields);
-  await pool.query(`UPDATE properties SET ${setSql} WHERE id = ?`, [...values, id]);
+  await Property.updateOne({ id }, { $set: fields }, { runValidators: true });
 
-  await logActivity(pool, { userId: req.user.id, action: 'Property Updated', entity: 'property', entityId: id, ip: req.ip });
+  await logActivity({ userId: req.user.id, action: 'Property Updated', entity: 'property', entityId: id, ip: req.ip });
   res.json({ success: true, message: 'Property updated.' });
 });
 
@@ -341,14 +364,18 @@ const updateProperty = asyncHandler(async (req, res) => {
 // DELETE /api/properties/:id  (admin only)
 // ---------------------------------------------------------------
 const deleteProperty = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const [images] = await pool.query('SELECT image_path FROM property_images WHERE property_id = ?', [id]);
-  const [result] = await pool.query('DELETE FROM properties WHERE id = ?', [id]);
-  if (result.affectedRows === 0) throw new ApiError(404, 'Property not found.');
+  const id = numericId(req.params.id);
+  const images = id ? await PropertyImage.find({ property_id: id }).select('image_path -_id').lean() : [];
+  const result = id ? await Property.deleteOne({ id }) : { deletedCount: 0 };
+  if (result.deletedCount === 0) throw new ApiError(404, 'Property not found.');
+  await Promise.all([
+    PropertyImage.deleteMany({ property_id: id }),
+    Lead.updateMany({ property_id: id }, { $set: { property_id: null } })
+  ]);
 
   await Promise.all(images.map(img => removeStoredImage(img.image_path)));
 
-  await logActivity(pool, { userId: req.user.id, action: 'Property Deleted', entity: 'property', entityId: id, ip: req.ip });
+  await logActivity({ userId: req.user.id, action: 'Property Deleted', entity: 'property', entityId: id, ip: req.ip });
   res.json({ success: true, message: 'Property deleted.' });
 });
 
@@ -356,28 +383,23 @@ const deleteProperty = asyncHandler(async (req, res) => {
 // POST /api/properties/:id/duplicate  (admin only)
 // ---------------------------------------------------------------
 const duplicateProperty = asyncHandler(async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM properties WHERE id = ?', [req.params.id]);
-  if (rows.length === 0) throw new ApiError(404, 'Property not found.');
-  const original = rows[0];
+  const original = await Property.findOne({ id: Number(req.params.id) }).lean();
+  if (!original) throw new ApiError(404, 'Property not found.');
 
   const fields = pickFields(original);
   const duplicateSuffix = ' (Copy)';
   fields.title = `${String(original.title).slice(0, 255 - duplicateSuffix.length)}${duplicateSuffix}`;
-  fields.slug = await generateUniqueSlug(pool, 'properties', fields.title);
+  fields.slug = await generateUniqueSlug(Property, fields.title);
   fields.status = 'draft';
   fields.created_by = req.user.id;
 
-  const columns = Object.keys(fields);
-  const [result] = await pool.query(
-    `INSERT INTO properties (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
-    columns.map((c) => fields[c])
-  );
+  const property = await Property.create(fields);
 
   // Images are intentionally not shared between records. Upload images to the
   // draft copy so deleting either property can never break the other.
 
-  await logActivity(pool, { userId: req.user.id, action: 'Property Duplicated', entity: 'property', entityId: result.insertId, ip: req.ip });
-  res.status(201).json({ success: true, data: { id: result.insertId } });
+  await logActivity({ userId: req.user.id, action: 'Property Duplicated', entity: 'property', entityId: property.id, ip: req.ip });
+  res.status(201).json({ success: true, data: { id: property.id } });
 });
 
 // ---------------------------------------------------------------
@@ -392,16 +414,16 @@ const toggleProperty = asyncHandler(async (req, res) => {
 
   if (status !== undefined) {
     if (!ALLOWED_STATUSES.includes(status)) throw new ApiError(400, 'Invalid status value.');
-    const [result] = await pool.query('UPDATE properties SET status = ? WHERE id = ?', [status, id]);
-    if (result.affectedRows === 0) throw new ApiError(404, 'Property not found.');
-    await logActivity(pool, { userId: req.user.id, action: `Property status set to ${status}`, entity: 'property', entityId: id, ip: req.ip });
+    const result = await Property.updateOne({ id: Number(id) }, { $set: { status } }, { runValidators: true });
+    if (result.matchedCount === 0) throw new ApiError(404, 'Property not found.');
+    await logActivity({ userId: req.user.id, action: `Property status set to ${status}`, entity: 'property', entityId: Number(id), ip: req.ip });
     return res.json({ success: true, message: `Status updated to ${status}.` });
   }
 
   if (!ALLOWED_TOGGLES.includes(field)) throw new ApiError(400, 'Invalid toggle field.');
-  const [result] = await pool.query(`UPDATE properties SET ${field} = ? WHERE id = ?`, [value ? 1 : 0, id]);
-  if (result.affectedRows === 0) throw new ApiError(404, 'Property not found.');
-  await logActivity(pool, { userId: req.user.id, action: `Property ${field} set to ${!!value}`, entity: 'property', entityId: id, ip: req.ip });
+  const result = await Property.updateOne({ id: Number(id) }, { $set: { [field]: value ? 1 : 0 } }, { runValidators: true });
+  if (result.matchedCount === 0) throw new ApiError(404, 'Property not found.');
+  await logActivity({ userId: req.user.id, action: `Property ${field} set to ${!!value}`, entity: 'property', entityId: Number(id), ip: req.ip });
   res.json({ success: true, message: 'Property updated.' });
 });
 
@@ -409,39 +431,37 @@ const toggleProperty = asyncHandler(async (req, res) => {
 // IMAGES
 // ---------------------------------------------------------------
 const uploadImages = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const id = numericId(req.params.id);
   let keepFiles = false;
   try {
-    const [prop] = await pool.query('SELECT id FROM properties WHERE id = ?', [id]);
-    if (prop.length === 0) throw new ApiError(404, 'Property not found.');
+    if (!id || !await Property.exists({ id })) throw new ApiError(404, 'Property not found.');
 
     if (!req.files || req.files.length === 0) throw new ApiError(400, 'No images uploaded.');
     if (req.files.some(file => !hasValidImageSignature(file.path))) {
       throw new ApiError(400, 'One or more files are not valid JPEG, PNG or WEBP images.');
     }
 
-    const [existingCount] = await pool.query('SELECT COUNT(*) AS c FROM property_images WHERE property_id = ?', [id]);
-    let sortOrder = existingCount[0].c;
+    const lastImage = await PropertyImage.findOne({ property_id: id })
+      .select('sort_order -_id').sort({ sort_order: -1 }).lean();
+    let sortOrder = lastImage ? lastImage.sort_order + 1 : 0;
     const inserted = [];
-    const connection = await pool.getConnection();
     try {
-      await connection.beginTransaction();
       for (const file of req.files) {
         const relativePath = `/uploads/properties/${file.filename}`;
         const isFeatured = sortOrder === 0 ? 1 : 0;
-        const [result] = await connection.query(
-          'INSERT INTO property_images (property_id, image_path, alt_text, is_featured, sort_order) VALUES (?, ?, ?, ?, ?)',
-          [id, relativePath, String(req.body.alt_text || '').trim().slice(0, 255), isFeatured, sortOrder]
-        );
-        inserted.push({ id: result.insertId, image_path: relativePath });
+        const image = await PropertyImage.create({
+          property_id: id,
+          image_path: relativePath,
+          alt_text: String(req.body.alt_text || '').trim().slice(0, 255) || null,
+          is_featured: isFeatured,
+          sort_order: sortOrder
+        });
+        inserted.push({ id: image.id, image_path: relativePath });
         sortOrder += 1;
       }
-      await connection.commit();
     } catch (error) {
-      await connection.rollback();
+      if (inserted.length) await PropertyImage.deleteMany({ id: { $in: inserted.map((image) => image.id) } });
       throw error;
-    } finally {
-      connection.release();
     }
 
     keepFiles = true;
@@ -452,18 +472,16 @@ const uploadImages = asyncHandler(async (req, res) => {
 });
 
 const deleteImage = asyncHandler(async (req, res) => {
-  const { imageId } = req.params;
-  const [rows] = await pool.query('SELECT image_path FROM property_images WHERE id = ?', [imageId]);
-  if (rows.length === 0) throw new ApiError(404, 'Image not found.');
-
-  await pool.query('DELETE FROM property_images WHERE id = ?', [imageId]);
-  await removeStoredImage(rows[0].image_path);
+  const imageId = numericId(req.params.imageId);
+  const image = imageId ? await PropertyImage.findOneAndDelete({ id: imageId }) : null;
+  if (!image) throw new ApiError(404, 'Image not found.');
+  await removeStoredImage(image.image_path);
 
   res.json({ success: true, message: 'Image deleted.' });
 });
 
 const reorderImages = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const id = numericId(req.params.id);
   const { order } = req.body; // array of { id, sort_order, is_featured }
   if (!Array.isArray(order) || order.length === 0) throw new ApiError(400, 'order must be a non-empty array.');
   if (order.filter(item => item.is_featured).length > 1) throw new ApiError(400, 'Only one image can be featured.');
@@ -472,29 +490,17 @@ const reorderImages = asyncHandler(async (req, res) => {
   }
 
   const ids = order.map(item => Number(item.id));
-  const placeholders = ids.map(() => '?').join(',');
-  const [owned] = await pool.query(
-    `SELECT id FROM property_images WHERE property_id = ? AND id IN (${placeholders})`,
-    [id, ...ids]
-  );
+  const owned = id
+    ? await PropertyImage.find({ property_id: id, id: { $in: ids } }).select('id -_id').lean()
+    : [];
   if (owned.length !== new Set(ids).size) throw new ApiError(400, 'One or more images do not belong to this property.');
 
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-    for (const item of order) {
-      await connection.query(
-        'UPDATE property_images SET sort_order = ?, is_featured = ? WHERE id = ? AND property_id = ?',
-        [Number(item.sort_order), item.is_featured ? 1 : 0, Number(item.id), id]
-      );
+  await PropertyImage.bulkWrite(order.map((item) => ({
+    updateOne: {
+      filter: { id: Number(item.id), property_id: id },
+      update: { $set: { sort_order: Number(item.sort_order), is_featured: item.is_featured ? 1 : 0 } }
     }
-    await connection.commit();
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
+  })));
   res.json({ success: true, message: 'Image order updated.' });
 });
 

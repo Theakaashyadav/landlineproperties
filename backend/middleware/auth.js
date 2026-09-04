@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/db');
+const { User } = require('../models');
 
 function requestToken(req) {
   if (req.cookies && req.cookies.token) return req.cookies.token;
@@ -30,11 +30,9 @@ async function authenticate(req, res, next) {
   }
 
   try {
-    const [rows] = await pool.query(
-      'SELECT id, name, email, role, is_active, auth_version FROM users WHERE id = ? LIMIT 1',
-      [Number(decoded.id)]
-    );
-    const user = rows[0];
+    const user = await User.findOne({ id: Number(decoded.id) })
+      .select('id name email role is_active auth_version -_id')
+      .lean();
     const tokenVersion = Number(decoded.ver || 0);
     if (!user || !user.is_active || Number(user.auth_version || 0) !== tokenVersion) {
       return res.status(401).json({ success: false, message: 'Your session is no longer active. Please log in again.' });

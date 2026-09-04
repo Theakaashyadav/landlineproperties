@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/db');
+const { User } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { requestToken } = require('../middleware/auth');
 const { logActivity } = require('../utils/activityLog');
@@ -19,17 +19,14 @@ const login = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Email and password are required.');
   }
 
-  const [rows] = await pool.query(
-    'SELECT id, name, email, password_hash, role, is_active, auth_version FROM users WHERE email = ? LIMIT 1',
-    [email.trim().toLowerCase()]
-  );
+  const user = await User.findOne({ email: email.trim().toLowerCase() })
+    .select('id name email password_hash role is_active auth_version -_id')
+    .lean();
 
   // Same generic message whether the email doesn't exist or the password is wrong,
   // so we don't reveal which accounts exist.
   const genericError = 'Invalid email or password.';
-  if (rows.length === 0) throw new ApiError(401, genericError);
-
-  const user = rows[0];
+  if (!user) throw new ApiError(401, genericError);
   if (!user.is_active) throw new ApiError(403, 'This account has been deactivated.');
 
   const match = await bcrypt.compare(password, user.password_hash);
@@ -41,8 +38,8 @@ const login = asyncHandler(async (req, res) => {
     { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
   );
 
-  await pool.query('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id]);
-  await logActivity(pool, { userId: user.id, action: 'Logged in', entity: 'user', entityId: user.id, ip: req.ip });
+  await User.updateOne({ id: user.id }, { $set: { last_login_at: new Date() } });
+  await logActivity({ userId: user.id, action: 'Logged in', entity: 'user', entityId: user.id, ip: req.ip });
 
   res.cookie('token', token, COOKIE_OPTIONS);
   res.json({
@@ -57,9 +54,9 @@ const logout = asyncHandler(async (req, res) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       if (Number.isInteger(Number(decoded.id))) {
-        await pool.query(
-          'UPDATE users SET auth_version = auth_version + 1 WHERE id = ? AND auth_version = ?',
-          [Number(decoded.id), Number(decoded.ver || 0)]
+        await User.updateOne(
+          { id: Number(decoded.id), auth_version: Number(decoded.ver || 0) },
+          { $inc: { auth_version: 1 } }
         );
       }
     } catch (error) {

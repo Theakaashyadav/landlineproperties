@@ -6,8 +6,12 @@ function errorHandler(err, req, res, next) {
   if (err instanceof SyntaxError && err.type === 'entity.parse.failed') status = 400;
   if (status >= 500) console.error(err);
 
-  if (err.code === 'ER_DUP_ENTRY') {
+  if (err.code === 11000 || err.code === 11001) {
     return res.status(409).json({ success: false, message: 'A record with this value already exists (duplicate slug or unique field).' });
+  }
+
+  if (err.name === 'ValidationError' || err.name === 'CastError') {
+    return res.status(400).json({ success: false, message: 'One or more values are invalid.' });
   }
 
   if (err.type === 'entity.too.large' || err.code === 'LIMIT_FILE_SIZE') {
@@ -26,12 +30,9 @@ function errorHandler(err, req, res, next) {
     return res.status(400).json({ success: false, message: 'The upload does not meet the file-count or field limits.' });
   }
 
-  if (err.code === 'ER_NO_REFERENCED_ROW_2') {
-    return res.status(400).json({ success: false, message: 'The selected related record does not exist.' });
-  }
-
-  if (['ER_DATA_TOO_LONG', 'ER_WARN_DATA_OUT_OF_RANGE', 'ER_TRUNCATED_WRONG_VALUE', 'ER_BAD_NULL_ERROR'].includes(err.code)) {
-    return res.status(400).json({ success: false, message: 'One or more values are invalid or too long.' });
+  if (['MongoServerSelectionError', 'MongooseServerSelectionError', 'MongoNetworkError', 'MongoNotConnectedError'].includes(err.name)
+    || err.code === 18) {
+    return res.status(503).json({ success: false, message: 'Database temporarily unavailable.' });
   }
 
   const message = status === 500 && process.env.NODE_ENV === 'production'

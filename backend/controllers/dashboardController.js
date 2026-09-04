@@ -1,55 +1,67 @@
-const { pool } = require('../config/db');
+const { Property, Project, Broker, Lead, ActivityLog, User } = require('../models');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { cleanDocument } = require('../utils/documents');
 
 // GET /api/admin/dashboard/stats
 const getStats = asyncHandler(async (req, res) => {
-  const [[properties]] = await pool.query(`
-    SELECT
-      COUNT(*) AS total,
-      SUM(status = 'published') AS active,
-      SUM(status = 'pending') AS pending,
-      SUM(featured = 1) AS featured
-    FROM properties`);
+  const trendStart = new Date();
+  trendStart.setUTCMonth(trendStart.getUTCMonth() - 6);
 
-  const [[projects]] = await pool.query('SELECT COUNT(*) AS total FROM projects');
-  const [[brokers]] = await pool.query('SELECT COUNT(*) AS total FROM brokers');
-  const [[leads]] = await pool.query(`
-    SELECT COUNT(*) AS total, SUM(status = 'New') AS new_leads,
-           SUM(status = 'Site Visit') AS site_visits
-    FROM leads`);
+  const [
+    totalProperties, activeProperties, pendingProperties, featuredProperties,
+    totalProjects, totalBrokers, totalLeads, newLeads, siteVisitRequests,
+    recentPropertiesRaw, recentLeadsRaw, recentActivityRaw, enquiryTrendRaw
+  ] = await Promise.all([
+    Property.countDocuments(),
+    Property.countDocuments({ status: 'published' }),
+    Property.countDocuments({ status: 'pending' }),
+    Property.countDocuments({ featured: 1 }),
+    Project.countDocuments(),
+    Broker.countDocuments(),
+    Lead.countDocuments(),
+    Lead.countDocuments({ status: 'New' }),
+    Lead.countDocuments({ status: 'Site Visit' }),
+    Property.find().select('id title city price status created_at -_id').sort({ created_at: -1 }).limit(5).lean(),
+    Lead.find().select('id name phone requirement status created_at -_id').sort({ created_at: -1 }).limit(5).lean(),
+    ActivityLog.find().select('user_id action entity entity_id created_at -_id').sort({ created_at: -1 }).limit(10).lean(),
+    Lead.aggregate([
+      { $match: { created_at: { $gte: trendStart } } },
+      { $group: { _id: { year: { $year: '$created_at' }, month: { $month: '$created_at' } }, count: { $sum: 1 } } },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ])
+  ]);
 
-  const [recentProperties] = await pool.query(
-    'SELECT id, title, city, price, status, created_at FROM properties ORDER BY created_at DESC LIMIT 5'
-  );
-  const [recentLeads] = await pool.query(
-    'SELECT id, name, phone, requirement, status, created_at FROM leads ORDER BY created_at DESC LIMIT 5'
-  );
-  const [recentActivity] = await pool.query(
-    `SELECT a.action, a.entity, a.entity_id, a.created_at, u.name AS user_name
-     FROM activity_logs a LEFT JOIN users u ON u.id = a.user_id
-     ORDER BY a.created_at DESC LIMIT 10`
-  );
-
-  const [enquiryTrend] = await pool.query(`
-    SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS count
-    FROM leads
-    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-    GROUP BY month ORDER BY month ASC`);
+  const userIds = [...new Set(recentActivityRaw.map((entry) => entry.user_id).filter(Boolean))];
+  const users = userIds.length
+    ? await User.find({ id: { $in: userIds } }).select('id name -_id').lean()
+    : [];
+  const userNames = new Map(users.map((user) => [user.id, user.name]));
+  const recentActivity = recentActivityRaw.map((entry) => ({
+    action: entry.action,
+    entity: entry.entity,
+    entity_id: entry.entity_id,
+    created_at: entry.created_at,
+    user_name: userNames.get(entry.user_id) || null
+  }));
+  const enquiryTrend = enquiryTrendRaw.map((entry) => ({
+    month: `${entry._id.year}-${String(entry._id.month).padStart(2, '0')}`,
+    count: entry.count
+  }));
 
   res.json({
     success: true,
     data: {
-      totalProperties: properties.total || 0,
-      activeProperties: properties.active || 0,
-      featuredProperties: properties.featured || 0,
-      pendingProperties: properties.pending || 0,
-      totalProjects: projects.total || 0,
-      totalBrokers: brokers.total || 0,
-      totalLeads: leads.total || 0,
-      newLeads: leads.new_leads || 0,
-      siteVisitRequests: leads.site_visits || 0,
-      recentProperties,
-      recentLeads,
+      totalProperties,
+      activeProperties,
+      featuredProperties,
+      pendingProperties,
+      totalProjects,
+      totalBrokers,
+      totalLeads,
+      newLeads,
+      siteVisitRequests,
+      recentProperties: cleanDocument(recentPropertiesRaw),
+      recentLeads: cleanDocument(recentLeadsRaw),
       recentActivity,
       enquiryTrend
     }

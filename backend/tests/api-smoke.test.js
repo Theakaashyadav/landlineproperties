@@ -4,18 +4,36 @@ const assert = require('node:assert/strict');
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'automated-test-secret-at-least-32-characters';
 process.env.CORS_ORIGINS = 'http://localhost:5500';
 process.env.NODE_ENV = 'test';
+process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017';
+process.env.MONGODB_DB_NAME = 'landline_properties_test';
 
-const { pool } = require('../config/db');
-pool.getConnection = async () => ({ release() {} });
-pool.query = async (sql) => {
-  if (/COUNT\(\*\) AS total FROM properties/i.test(sql)) return [[{ total: 1 }]];
-  if (/SELECT[\s\S]+FROM properties p/i.test(sql)) return [[{
+const database = require('../config/db');
+const { Property, PropertyImage } = require('../models');
+
+database.testConnection = async () => true;
+database.connectDatabase = async () => true;
+
+function queryResult(value) {
+  return {
+    select() { return this; },
+    sort() { return this; },
+    skip() { return this; },
+    limit() { return this; },
+    lean: async () => value
+  };
+}
+
+let propertyQueryCount = 0;
+Property.find = () => {
+  propertyQueryCount += 1;
+  return queryResult([{
     id: 1, title: 'Test Property', slug: 'test-property', property_type: 'Apartment',
     purpose: 'Buy', price: 15000000, city: 'Gurgaon', locality: 'Sector 65',
     featured: 1, verified: 1, new_launch: 0, status: 'published', cover_image: null
-  }]];
-  throw new Error(`Unexpected smoke-test query: ${sql}`);
+  }]);
 };
+Property.countDocuments = async () => 1;
+PropertyImage.find = () => queryResult([]);
 
 const app = require('../server');
 let server;
@@ -28,7 +46,6 @@ test.before(async () => {
 
 test.after(async () => {
   await new Promise(resolve => server.close(resolve));
-  await pool.end();
 });
 
 test('health endpoint verifies API and database availability', async () => {
@@ -50,10 +67,12 @@ test('public property listing returns the standard response shape', async () => 
 });
 
 test('invalid public purpose is rejected without querying the database', async () => {
+  const before = propertyQueryCount;
   const response = await fetch(`${baseUrl}/api/properties?purpose=Unknown`);
   assert.equal(response.status, 400);
   const result = await response.json();
   assert.equal(result.success, false);
+  assert.equal(propertyQueryCount, before);
 });
 
 test('unknown API route returns JSON 404', async () => {

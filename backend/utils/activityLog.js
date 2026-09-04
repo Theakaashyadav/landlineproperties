@@ -1,12 +1,17 @@
-async function logActivity(pool, { userId, action, entity, entityId, ip }) {
+const { ActivityLog } = require('../models');
+
+async function logActivity({ userId, action, entity, entityId, ip }) {
   try {
-    await pool.query(
-      `INSERT INTO activity_logs (user_id, action, entity, entity_id, ip_address) VALUES (?, ?, ?, ?, ?)`,
-      [userId || null, action, entity || null, entityId || null, ip || null]
-    );
-  } catch (err) {
+    await ActivityLog.create({
+      user_id: userId || null,
+      action,
+      entity: entity || null,
+      entity_id: entityId || null,
+      ip_address: ip || null
+    });
+  } catch (error) {
     // Activity logging must never break the primary request.
-    console.error('Activity log failed:', err.message);
+    console.error('Activity log failed:', error.message);
   }
 }
 
