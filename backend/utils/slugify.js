@@ -1,7 +1,13 @@
 const slugify = require('slugify');
 
-async function generateUniqueSlug(pool, table, text, ignoreId = null) {
-  const base = slugify(text, { lower: true, strict: true, trim: true });
+const ALLOWED_TABLES = new Set(['properties', 'projects', 'locations', 'brokers']);
+
+async function generateUniqueSlug(pool, table, text, ignoreId = null, maxLength = 255) {
+  if (!ALLOWED_TABLES.has(table)) throw new Error('Unsupported slug table.');
+  if (!Number.isInteger(maxLength) || maxLength < 16 || maxLength > 255) throw new Error('Invalid slug length.');
+
+  const generated = slugify(String(text || ''), { lower: true, strict: true, trim: true }) || 'listing';
+  const base = generated.slice(0, maxLength).replace(/-+$/g, '') || 'listing';
   let slug = base;
   let counter = 1;
 
@@ -14,7 +20,8 @@ async function generateUniqueSlug(pool, table, text, ignoreId = null) {
     const [rows] = await pool.query(query, params);
     if (rows.length === 0) return slug;
     counter += 1;
-    slug = `${base}-${counter}`;
+    const suffix = `-${counter}`;
+    slug = `${base.slice(0, maxLength - suffix.length).replace(/-+$/g, '')}${suffix}`;
   }
 }
 

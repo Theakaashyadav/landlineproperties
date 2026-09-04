@@ -3,7 +3,9 @@ const { listLeads, updateLead, addNote, deleteLead } = require('../controllers/l
 const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
-router.use(authenticate, authorize('super_admin', 'admin', 'editor'));
+// Lead records contain personal contact information. Content-only editors do
+// not have access to this router.
+router.use(authenticate, authorize('super_admin', 'admin'));
 
 router.get('/', listLeads);
 router.put('/:id', updateLead);

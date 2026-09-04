@@ -2,12 +2,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
+const { requestToken } = require('../middleware/auth');
 const { logActivity } = require('../utils/activityLog');
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
+  path: '/',
   maxAge: 8 * 60 * 60 * 1000 // 8 hours
 };
 
@@ -18,7 +20,7 @@ const login = asyncHandler(async (req, res) => {
   }
 
   const [rows] = await pool.query(
-    'SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ? LIMIT 1',
+    'SELECT id, name, email, password_hash, role, is_active, auth_version FROM users WHERE email = ? LIMIT 1',
     [email.trim().toLowerCase()]
   );
 
@@ -34,7 +36,7 @@ const login = asyncHandler(async (req, res) => {
   if (!match) throw new ApiError(401, genericError);
 
   const token = jwt.sign(
-    { id: user.id, name: user.name, email: user.email, role: user.role },
+    { id: user.id, ver: Number(user.auth_version || 0) },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
   );
@@ -50,7 +52,23 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const logout = asyncHandler(async (req, res) => {
-  res.clearCookie('token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' });
+  const token = requestToken(req);
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (Number.isInteger(Number(decoded.id))) {
+        await pool.query(
+          'UPDATE users SET auth_version = auth_version + 1 WHERE id = ? AND auth_version = ?',
+          [Number(decoded.id), Number(decoded.ver || 0)]
+        );
+      }
+    } catch (error) {
+      // Expired/invalid tokens still get removed from this browser. Database
+      // failures remain actionable instead of pretending revocation succeeded.
+      if (!['TokenExpiredError', 'JsonWebTokenError', 'NotBeforeError'].includes(error.name)) throw error;
+    }
+  }
+  res.clearCookie('token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
   res.json({ success: true, message: 'Logged out.' });
 });
 

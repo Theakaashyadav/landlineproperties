@@ -2,6 +2,8 @@ backend/node_modules/
 backend/.env
 backend/uploads/**
 !backend/uploads/.gitkeep
+.runtime/
+.deploy/
 *.log
 .DS_Store
 Thumbs.db

@@ -22,9 +22,9 @@ router.post('/', limiter,
   body('property_type').isIn(['Apartment','Villa','Plot','Independent House','Builder Floor','Commercial','Office','Shop','Warehouse','Land']),
   body('city').trim().isLength({ min: 2, max: 100 }),
   body('locality').optional({ checkFalsy: true }).trim().isLength({ max: 150 }),
-  body('purpose').optional({ checkFalsy: true }).isIn(['Buy','Rent','Commercial']),
-  body('price').optional({ checkFalsy: true }).isFloat({ min: 0 }),
-  body('description').optional({ checkFalsy: true }).isLength({ max: 5000 }),
+  body('purpose').isIn(['Buy','Rent']).withMessage('Please select whether the property is for sale or rent.'),
+  body('price').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0, max: 9999999999999.99 }).withMessage('Price must be a non-negative number.'),
+  body('description').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 5000 }),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return next(new ApiError(400, errors.array().map(error => error.msg).join(' ')));

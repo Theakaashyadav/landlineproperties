@@ -18,6 +18,7 @@ CREATE TABLE users (
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('super_admin','admin','editor') NOT NULL DEFAULT 'admin',
   is_active TINYINT(1) NOT NULL DEFAULT 1,
+  auth_version INT UNSIGNED NOT NULL DEFAULT 0,
   last_login_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -76,7 +77,7 @@ CREATE TABLE properties (
   slug VARCHAR(255) NOT NULL UNIQUE,
   property_type ENUM('Apartment','Villa','Plot','Independent House','Builder Floor','Commercial','Office','Shop','Warehouse','Land') NOT NULL,
   purpose ENUM('Buy','Rent','Commercial') NOT NULL,
-  price DECIMAL(15,2) NOT NULL,
+  price DECIMAL(15,2) NULL,
   price_label VARCHAR(100),
   city VARCHAR(100) NOT NULL,
   locality VARCHAR(150),

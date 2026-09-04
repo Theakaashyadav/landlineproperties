@@ -1,3 +1,5 @@
+@import url("universal-responsive.css");
+
 .mobile-nav-toggle {
     display: none;
     background: #fff;
@@ -60,8 +62,6 @@
         transform: translateY(-6px) rotate(-45deg)
     }
 }
-
-@import url("universal-responsive.css");
 
 .mobile-nav-actions {
     display: none

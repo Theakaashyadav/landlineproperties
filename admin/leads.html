@@ -15,17 +15,19 @@
   <div class="main">
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
-        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Open admin menu">☰</button>
         <h1>Leads</h1>
       </div>
-      <button class="btn btn-outline" id="export-btn">⬇ Export CSV</button>
+      <button type="button" class="btn btn-outline" id="export-btn" disabled>⬇ Export current page (CSV)</button>
     </div>
 
     <div class="content">
       <div class="panel">
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-          <input type="text" id="search-input" placeholder="Search name, phone, email..." style="flex:1;min-width:200px;">
-          <select id="status-filter">
+          <label for="search-input" class="sr-only">Search leads</label>
+          <input type="search" id="search-input" maxlength="150" autocomplete="off" placeholder="Search name, phone, email..." style="flex:1;min-width:200px;">
+          <label for="status-filter" class="sr-only">Filter leads by status</label>
+          <select id="status-filter" aria-label="Filter leads by status">
             <option value="">All Statuses</option>
             <option>New</option><option>Contacted</option><option>Follow-up</option>
             <option>Site Visit</option><option>Interested</option><option>Converted</option>
@@ -34,16 +36,18 @@
         </div>
 
         <table>
+          <caption class="sr-only">Leads on the current results page</caption>
           <thead><tr><th>Name</th><th>Phone</th><th>Requirement</th><th>Location</th><th>Source</th><th>Status</th><th>Received</th><th>Actions</th></tr></thead>
           <tbody id="table-body"><tr><td colspan="8" class="empty-state">Loading leads...</td></tr></tbody>
         </table>
-        <div class="pagination" id="pagination"></div>
+        <nav class="pagination" id="pagination" aria-label="Lead result pages"></nav>
       </div>
     </div>
   </div>
 </div>
 
 <script src="js/admin-core.js"></script>
+<script src="js/csv.js"></script>
 <script>
 requireAuth();
 renderShell('leads.html');
@@ -52,6 +56,19 @@ const STATUS_OPTIONS = ['New','Contacted','Follow-up','Site Visit','Interested',
 let currentPage = 1;
 let searchTimer = null;
 let cachedRows = [];
+const exportButton = document.getElementById('export-btn');
+
+function updateExportButton() {
+  exportButton.disabled = cachedRows.length === 0;
+  exportButton.textContent = cachedRows.length
+    ? `⬇ Export current page (${cachedRows.length} rows, CSV)`
+    : '⬇ Export current page (CSV)';
+}
+
+function readableDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('en-IN');
+}
 
 async function loadLeads(page = 1) {
   currentPage = page;
@@ -62,13 +79,18 @@ async function loadLeads(page = 1) {
   if (status) params.set('status', status);
 
   document.getElementById('table-body').innerHTML = `<tr><td colspan="8" class="empty-state">Loading...</td></tr>`;
+  cachedRows = [];
+  updateExportButton();
   try {
     const res = await apiRequest(`/admin/leads?${params.toString()}`);
     cachedRows = res.data;
+    updateExportButton();
     renderTable(res.data);
     renderPagination(res.pagination);
   } catch (err) {
     toast(err.message, 'error');
+    document.getElementById('table-body').innerHTML = `<tr><td colspan="8" class="empty-state">Failed to load leads.</td></tr>`;
+    document.getElementById('pagination').innerHTML = '';
   }
 }
 
@@ -78,16 +100,16 @@ function renderTable(rows) {
   body.innerHTML = rows.map(l => `
     <tr data-id="${l.id}">
       <td data-label="Name">${escapeHtml(l.name)}</td>
-      <td data-label="Phone"><a href="tel:${escapeHtml(l.phone)}">${escapeHtml(l.phone)}</a></td>
+      <td data-label="Phone"><a href="tel:${escapeHtml(String(l.phone || '').replace(/[^\d+]/g, ''))}">${escapeHtml(l.phone)}</a></td>
       <td data-label="Requirement">${escapeHtml(l.requirement || l.property_title || '-')}</td>
       <td data-label="Location">${escapeHtml(l.location || '-')}</td>
       <td data-label="Source">${escapeHtml(l.source)}</td>
       <td data-label="Status">
-        <select data-status-id="${l.id}">
-          ${STATUS_OPTIONS.map(s => `<option ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}
+        <select data-status-id="${l.id}" data-previous-status="${escapeHtml(l.status)}" aria-label="Status for ${escapeHtml(l.name)}">
+          ${STATUS_OPTIONS.map(s => `<option value="${escapeHtml(s)}" ${s === l.status ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
         </select>
       </td>
-      <td data-label="Received">${new Date(l.created_at).toLocaleDateString('en-IN')}</td>
+      <td data-label="Received">${readableDate(l.created_at)}</td>
       <td data-label="Actions">
         <div class="table-actions">
           <button class="btn btn-sm btn-outline" data-note="${l.id}">+ Note</button>
@@ -100,9 +122,9 @@ function renderTable(rows) {
 
 function renderPagination(p) {
   const el = document.getElementById('pagination');
-  if (p.totalPages <= 1) { el.innerHTML = ''; return; }
+  if (!p || p.totalPages <= 1) { el.innerHTML = ''; return; }
   let html = '';
-  for (let i = 1; i <= p.totalPages; i++) html += `<button class="${i === p.page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+  for (let i = 1; i <= p.totalPages; i++) html += `<button type="button" class="${i === p.page ? 'active' : ''}" data-page="${i}" aria-label="Go to leads page ${i}"${i === p.page ? ' aria-current="page"' : ''}>${i}</button>`;
   el.innerHTML = html;
   el.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => loadLeads(Number(btn.dataset.page))));
 }
@@ -110,18 +132,27 @@ function renderPagination(p) {
 document.getElementById('table-body').addEventListener('change', async (e) => {
   const sel = e.target.closest('[data-status-id]');
   if (!sel) return;
+  const previousStatus = sel.dataset.previousStatus;
+  sel.disabled = true;
   try {
     await apiRequest(`/admin/leads/${sel.dataset.statusId}`, { method: 'PUT', body: { status: sel.value } });
+    sel.dataset.previousStatus = sel.value;
     toast('Lead status updated.');
-  } catch (err) { toast(err.message, 'error'); }
+  } catch (err) {
+    sel.value = previousStatus;
+    toast(err.message, 'error');
+  } finally {
+    sel.disabled = false;
+  }
 });
 
 document.getElementById('table-body').addEventListener('click', async (e) => {
   const noteBtn = e.target.closest('[data-note]');
   const delBtn = e.target.closest('[data-delete]');
   if (noteBtn) {
-    const note = prompt('Add a note for this lead:');
+    const note = prompt('Add a note for this lead:')?.trim();
     if (!note) return;
+    if (note.length > 5000) { toast('Notes are limited to 5,000 characters.', 'error'); return; }
     try {
       await apiRequest(`/admin/leads/${noteBtn.dataset.note}/notes`, { method: 'POST', body: { note } });
       toast('Note added.');
@@ -140,19 +171,18 @@ document.getElementById('table-body').addEventListener('click', async (e) => {
 document.getElementById('search-input').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => loadLeads(1), 350); });
 document.getElementById('status-filter').addEventListener('change', () => loadLeads(1));
 
-document.getElementById('export-btn').addEventListener('click', () => {
+exportButton.addEventListener('click', () => {
   if (!cachedRows.length) { toast('Nothing to export on this page.', 'error'); return; }
   const headers = ['Name','Phone','Email','Requirement','Location','Budget','Status','Source','Received'];
-  const csvRows = [headers.join(',')];
-  cachedRows.forEach(l => {
-    csvRows.push([l.name, l.phone, l.email || '', l.requirement || '', l.location || '', l.budget || '', l.status, l.source, l.created_at]
-      .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
-  });
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const rows = cachedRows.map(l => [l.name, l.phone, l.email || '', l.requirement || '', l.location || '', l.budget || '', l.status, l.source, l.created_at]);
+  const blob = new Blob(['\uFEFF', AdminCsv.build(headers, rows)], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  const objectUrl = URL.createObjectURL(blob);
+  a.href = objectUrl;
   a.download = `leads-page-${currentPage}.csv`;
   a.click();
+  URL.revokeObjectURL(objectUrl);
+  toast(`Exported ${cachedRows.length} leads from page ${currentPage}.`);
 });
 
 loadLeads();

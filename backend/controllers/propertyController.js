@@ -24,13 +24,83 @@ function hasValidImageSignature(filePath) {
   return jpeg || png || webp;
 }
 
+async function removeUploadedFiles(files) {
+  await Promise.all((files || []).map(async (file) => {
+    if (!file || !file.path) return;
+    try {
+      await fs.promises.unlink(file.path);
+    } catch (error) {
+      if (error.code !== 'ENOENT') console.warn(`Could not remove uploaded file ${file.path}: ${error.message}`);
+    }
+  }));
+}
+
+async function removeStoredImage(imagePath) {
+  const filePath = uploadedFilePath(imagePath);
+  if (!filePath) return;
+  try {
+    await fs.promises.unlink(filePath);
+  } catch (error) {
+    if (error.code !== 'ENOENT') console.warn(`Could not remove stored image ${filePath}: ${error.message}`);
+  }
+}
+
+const PUBLIC_PROPERTY_KEYS = [
+  'id', 'title', 'slug', 'property_type', 'purpose', 'price', 'price_label',
+  'city', 'locality', 'sector', 'bhk', 'bathrooms', 'area', 'area_unit',
+  'property_status', 'possession_status', 'description', 'short_description',
+  'amenities', 'developer', 'rera_number', 'property_facing', 'floor',
+  'total_floors', 'parking', 'furnishing', 'year_built', 'featured', 'verified',
+  'new_launch', 'status', 'seo_title', 'seo_description', 'canonical_url',
+  'og_image', 'created_at', 'updated_at', 'cover_image', 'broker_name',
+  'broker_phone', 'broker_photo', 'broker_slug'
+];
+
+function toPublicProperty(row) {
+  return Object.fromEntries(PUBLIC_PROPERTY_KEYS
+    .filter(key => Object.prototype.hasOwnProperty.call(row, key))
+    .map(key => [key, row[key]]));
+}
+
 const PUBLIC_LIST_FIELDS = `
   p.id, p.title, p.slug, p.property_type, p.purpose, p.price, p.price_label,
   p.city, p.locality, p.sector, p.bhk, p.bathrooms, p.area, p.area_unit,
-  p.property_status, p.featured, p.verified, p.new_launch, p.status, p.created_at,
+  p.property_status, p.furnishing, p.short_description, p.featured, p.verified,
+  p.new_launch, p.status, p.created_at, p.updated_at,
   (SELECT image_path FROM property_images pi WHERE pi.property_id = p.id
      ORDER BY pi.is_featured DESC, pi.sort_order ASC LIMIT 1) AS cover_image
 `;
+
+const PUBLIC_DETAIL_FIELDS = `
+  p.id, p.title, p.slug, p.property_type, p.purpose, p.price, p.price_label,
+  p.city, p.locality, p.sector, p.bhk, p.bathrooms, p.area, p.area_unit,
+  p.property_status, p.possession_status, p.description, p.short_description,
+  p.amenities, p.developer, p.rera_number, p.property_facing, p.floor,
+  p.total_floors, p.parking, p.furnishing, p.year_built, p.featured,
+  p.verified, p.new_launch, p.status, p.seo_title, p.seo_description,
+  p.canonical_url, p.og_image, p.created_at, p.updated_at,
+  b.name AS broker_name, b.phone AS broker_phone, b.photo AS broker_photo,
+  b.slug AS broker_slug
+`;
+
+function optionalNumber(value, name, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
+  if (value === undefined || value === null || value === '') return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    throw new ApiError(400, `${name} must be a number between ${min} and ${max}.`);
+  }
+  return parsed;
+}
+
+function positiveInteger(value, name, fallback, max) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (!/^\d+$/.test(String(value))) throw new ApiError(400, `${name} must be a positive integer.`);
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > max) {
+    throw new ApiError(400, `${name} must be between 1 and ${max}.`);
+  }
+  return parsed;
+}
 
 // ---------------------------------------------------------------
 // GET /api/properties  (public — paginated + filterable)
@@ -42,24 +112,45 @@ const listProperties = asyncHandler(async (req, res) => {
     sort = 'newest', page = 1, limit = 12
   } = req.query;
 
-  const where = ['p.status = "published"'];
-  const params = [];
+  const where = ['p.status = ?'];
+  const params = ['published'];
 
   const allowedPurposes = ['Buy', 'Rent', 'Commercial'];
+  const allowedTypes = ['Apartment', 'Villa', 'Plot', 'Independent House', 'Builder Floor', 'Commercial', 'Office', 'Shop', 'Warehouse', 'Land'];
+  const allowedFurnishing = ['Unfurnished', 'Semi-Furnished', 'Fully Furnished'];
+  const allowedPropertyStatuses = ['Ready to Move', 'Under Construction'];
   if (purpose && !allowedPurposes.includes(purpose)) throw new ApiError(400, 'Invalid property purpose.');
+  if (type && !allowedTypes.includes(type)) throw new ApiError(400, 'Invalid property type.');
+  if (furnishing && !allowedFurnishing.includes(furnishing)) throw new ApiError(400, 'Invalid furnishing value.');
+  if (property_status && !allowedPropertyStatuses.includes(property_status)) throw new ApiError(400, 'Invalid property status.');
+  if (city && String(city).length > 100) throw new ApiError(400, 'City is too long.');
+  if (location && String(location).length > 150) throw new ApiError(400, 'Location is too long.');
+  if (bhk && String(bhk).length > 10) throw new ApiError(400, 'BHK value is too long.');
+  if (q && String(q).length > 150) throw new ApiError(400, 'Search query is too long.');
+
+  const minArea = optionalNumber(min_area, 'min_area', { min: 0, max: 99999999.99 });
+  const minPrice = optionalNumber(min_price, 'min_price', { min: 0, max: 9999999999999.99 });
+  const maxPrice = optionalNumber(max_price ?? budget, 'max_price', { min: 0, max: 9999999999999.99 });
+  if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+    throw new ApiError(400, 'min_price cannot be greater than max_price.');
+  }
 
   if (purpose) { where.push('p.purpose = ?'); params.push(purpose); }
   if (city) { where.push('p.city = ?'); params.push(city); }
-  if (location) { where.push('(p.city LIKE ? OR p.locality LIKE ? OR p.sector LIKE ?)'); params.push(`%${location}%`, `%${location}%`, `%${location}%`); }
+  if (location) {
+    const normalizedLocation = String(location).trim().replace(/-/g, ' ');
+    where.push('(p.city LIKE ? OR p.locality LIKE ? OR p.sector LIKE ?)');
+    params.push(`%${normalizedLocation}%`, `%${normalizedLocation}%`, `%${normalizedLocation}%`);
+  }
   if (type) { where.push('p.property_type = ?'); params.push(type); }
   if (bhk) { where.push('p.bhk = ?'); params.push(bhk); }
   if (furnishing) { where.push('p.furnishing = ?'); params.push(furnishing); }
   if (property_status) { where.push('p.property_status = ?'); params.push(property_status); }
-  if (min_area && Number.isFinite(Number(min_area))) { where.push('p.area >= ?'); params.push(Number(min_area)); }
+  if (minArea !== null) { where.push('p.area >= ?'); params.push(minArea); }
   if (featured === 'true') { where.push('p.featured = 1'); }
   if (new_launch === 'true') { where.push('p.new_launch = 1'); }
-  if (min_price && Number.isFinite(Number(min_price))) { where.push('p.price >= ?'); params.push(Number(min_price)); }
-  if ((max_price || budget) && Number.isFinite(Number(max_price || budget))) { where.push('p.price <= ?'); params.push(Number(max_price || budget)); }
+  if (minPrice !== null) { where.push('p.price >= ?'); params.push(minPrice); }
+  if (maxPrice !== null) { where.push('p.price <= ?'); params.push(maxPrice); }
   if (q) { where.push('MATCH(p.title, p.locality, p.description) AGAINST (? IN NATURAL LANGUAGE MODE)'); params.push(q); }
 
   const sortMap = {
@@ -69,8 +160,8 @@ const listProperties = asyncHandler(async (req, res) => {
   };
   const orderBy = sortMap[sort] || sortMap.newest;
 
-  const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const perPage = Math.min(48, Math.max(1, parseInt(limit, 10) || 12));
+  const pageNum = positiveInteger(page, 'page', 1, 1000000);
+  const perPage = positiveInteger(limit, 'limit', 12, 48);
   const offset = (pageNum - 1) * perPage;
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
@@ -88,12 +179,12 @@ const listProperties = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    data: rows,
+    data: rows.map(toPublicProperty),
     pagination: {
       page: pageNum,
       limit: perPage,
       total,
-      totalPages: Math.max(1, Math.ceil(total / perPage))
+      totalPages: Math.ceil(total / perPage)
     }
   });
 });
@@ -103,14 +194,14 @@ const listProperties = asyncHandler(async (req, res) => {
 // ---------------------------------------------------------------
 const getPropertyBySlug = asyncHandler(async (req, res) => {
   const [rows] = await pool.query(
-    `SELECT p.*, b.name AS broker_name, b.phone AS broker_phone, b.photo AS broker_photo, b.slug AS broker_slug
+    `SELECT ${PUBLIC_DETAIL_FIELDS}
      FROM properties p
      LEFT JOIN brokers b ON b.id = p.broker_id
-     WHERE p.slug = ? AND p.status = "published" LIMIT 1`,
-    [req.params.slug]
+     WHERE p.slug = ? AND p.status = ? LIMIT 1`,
+    [req.params.slug, 'published']
   );
   if (rows.length === 0) throw new ApiError(404, 'Property not found.');
-  const property = rows[0];
+  const property = toPublicProperty(rows[0]);
 
   const [images] = await pool.query(
     'SELECT id, image_path, alt_text, is_featured, sort_order FROM property_images WHERE property_id = ? ORDER BY is_featured DESC, sort_order ASC',
@@ -122,12 +213,12 @@ const getPropertyBySlug = asyncHandler(async (req, res) => {
 
   const [related] = await pool.query(
     `SELECT ${PUBLIC_LIST_FIELDS} FROM properties p
-     WHERE p.status = "published" AND p.id != ? AND (p.city = ? OR p.property_type = ?)
+     WHERE p.status = ? AND p.id != ? AND (p.city = ? OR p.property_type = ?)
      ORDER BY p.created_at DESC LIMIT 4`,
-    [property.id, property.city, property.property_type]
+    ['published', property.id, property.city, property.property_type]
   );
 
-  res.json({ success: true, data: property, related });
+  res.json({ success: true, data: property, related: related.map(toPublicProperty) });
 });
 
 // ---------------------------------------------------------------
@@ -137,16 +228,20 @@ const adminListProperties = asyncHandler(async (req, res) => {
   const { status, page = 1, limit = 20, q } = req.query;
   const where = [];
   const params = [];
+  if (status && !ALLOWED_STATUSES.includes(status)) throw new ApiError(400, 'Invalid status value.');
+  if (q && String(q).length > 150) throw new ApiError(400, 'Search query is too long.');
   if (status) { where.push('p.status = ?'); params.push(status); }
   if (q) { where.push('p.title LIKE ?'); params.push(`%${q}%`); }
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
-  const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const perPage = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const pageNum = positiveInteger(page, 'page', 1, 1000000);
+  const perPage = positiveInteger(limit, 'limit', 20, 100);
   const offset = (pageNum - 1) * perPage;
 
   const [rows] = await pool.query(
-    `SELECT ${PUBLIC_LIST_FIELDS} FROM properties p ${whereSql} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+    `SELECT ${PUBLIC_LIST_FIELDS}, p.is_user_submitted, p.submitted_by_name,
+      p.submitted_by_phone, p.submitted_by_email
+     FROM properties p ${whereSql} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
     [...params, perPage, offset]
   );
   const [countRows] = await pool.query(`SELECT COUNT(*) AS total FROM properties p ${whereSql}`, params);
@@ -154,7 +249,7 @@ const adminListProperties = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: rows,
-    pagination: { page: pageNum, limit: perPage, total: countRows[0].total, totalPages: Math.max(1, Math.ceil(countRows[0].total / perPage)) }
+    pagination: { page: pageNum, limit: perPage, total: countRows[0].total, totalPages: Math.ceil(countRows[0].total / perPage) }
   });
 });
 
@@ -172,12 +267,24 @@ const ALLOWED_FIELDS = [
   'floor', 'total_floors', 'parking', 'furnishing', 'year_built', 'broker_id', 'featured',
   'verified', 'new_launch', 'status', 'seo_title', 'seo_description', 'canonical_url', 'og_image'
 ];
+const NULLABLE_FIELDS = new Set([
+  'price', 'price_label', 'locality', 'sector', 'location_id', 'bhk', 'bathrooms',
+  'area', 'possession_status', 'description', 'short_description', 'amenities',
+  'developer', 'rera_number', 'property_facing', 'floor', 'total_floors', 'parking',
+  'furnishing', 'year_built', 'broker_id', 'seo_title', 'seo_description',
+  'canonical_url', 'og_image'
+]);
+const BOOLEAN_FIELDS = new Set(['featured', 'verified', 'new_launch']);
 
 function pickFields(body) {
   const out = {};
   for (const key of ALLOWED_FIELDS) {
     if (body[key] !== undefined) {
-      out[key] = key === 'amenities' && typeof body[key] !== 'string' ? JSON.stringify(body[key]) : body[key];
+      let value = body[key];
+      if ((value === '' || value === null) && NULLABLE_FIELDS.has(key)) value = null;
+      if (key === 'amenities' && value !== null && typeof value !== 'string') value = JSON.stringify(value);
+      if (BOOLEAN_FIELDS.has(key)) value = value === true || value === 1 || value === '1' || value === 'true' ? 1 : 0;
+      out[key] = value;
     }
   }
   return out;
@@ -218,9 +325,8 @@ const updateProperty = asyncHandler(async (req, res) => {
   if (existing.length === 0) throw new ApiError(404, 'Property not found.');
 
   const fields = pickFields(req.body);
-  if (req.body.title && req.body.title !== existing[0].title) {
-    fields.slug = await generateUniqueSlug(pool, 'properties', req.body.title, id);
-  }
+  // Slugs remain stable after publication so title edits do not break indexed
+  // URLs and saved links. Duplicate/create operations still generate new slugs.
   if (Object.keys(fields).length === 0) throw new ApiError(400, 'No valid fields to update.');
 
   const setSql = Object.keys(fields).map((k) => `${k} = ?`).join(', ');
@@ -240,10 +346,7 @@ const deleteProperty = asyncHandler(async (req, res) => {
   const [result] = await pool.query('DELETE FROM properties WHERE id = ?', [id]);
   if (result.affectedRows === 0) throw new ApiError(404, 'Property not found.');
 
-  images.forEach((img) => {
-    const filePath = uploadedFilePath(img.image_path);
-    if (filePath) fs.unlink(filePath, () => {});
-  });
+  await Promise.all(images.map(img => removeStoredImage(img.image_path)));
 
   await logActivity(pool, { userId: req.user.id, action: 'Property Deleted', entity: 'property', entityId: id, ip: req.ip });
   res.json({ success: true, message: 'Property deleted.' });
@@ -258,7 +361,8 @@ const duplicateProperty = asyncHandler(async (req, res) => {
   const original = rows[0];
 
   const fields = pickFields(original);
-  fields.title = `${original.title} (Copy)`;
+  const duplicateSuffix = ' (Copy)';
+  fields.title = `${String(original.title).slice(0, 255 - duplicateSuffix.length)}${duplicateSuffix}`;
   fields.slug = await generateUniqueSlug(pool, 'properties', fields.title);
   fields.status = 'draft';
   fields.created_by = req.user.id;
@@ -306,42 +410,45 @@ const toggleProperty = asyncHandler(async (req, res) => {
 // ---------------------------------------------------------------
 const uploadImages = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const [prop] = await pool.query('SELECT id FROM properties WHERE id = ?', [id]);
-  if (prop.length === 0) throw new ApiError(404, 'Property not found.');
-
-  if (!req.files || req.files.length === 0) throw new ApiError(400, 'No images uploaded.');
-  if (req.files.some(file => !hasValidImageSignature(file.path))) {
-    req.files.forEach(file => fs.unlink(file.path, () => {}));
-    throw new ApiError(400, 'One or more files are not valid JPEG, PNG or WEBP images.');
-  }
-
-  const [existingCount] = await pool.query('SELECT COUNT(*) AS c FROM property_images WHERE property_id = ?', [id]);
-  let sortOrder = existingCount[0].c;
-
-  const inserted = [];
-  const connection = await pool.getConnection();
+  let keepFiles = false;
   try {
-    await connection.beginTransaction();
-    for (const file of req.files) {
-      const relativePath = `/uploads/properties/${file.filename}`;
-      const isFeatured = sortOrder === 0 ? 1 : 0;
-      const [result] = await connection.query(
-        'INSERT INTO property_images (property_id, image_path, alt_text, is_featured, sort_order) VALUES (?, ?, ?, ?, ?)',
-        [id, relativePath, String(req.body.alt_text || '').trim().slice(0, 255), isFeatured, sortOrder]
-      );
-      inserted.push({ id: result.insertId, image_path: relativePath });
-      sortOrder += 1;
-    }
-    await connection.commit();
-  } catch (error) {
-    await connection.rollback();
-    req.files.forEach(file => fs.unlink(file.path, () => {}));
-    throw error;
-  } finally {
-    connection.release();
-  }
+    const [prop] = await pool.query('SELECT id FROM properties WHERE id = ?', [id]);
+    if (prop.length === 0) throw new ApiError(404, 'Property not found.');
 
-  res.status(201).json({ success: true, data: inserted });
+    if (!req.files || req.files.length === 0) throw new ApiError(400, 'No images uploaded.');
+    if (req.files.some(file => !hasValidImageSignature(file.path))) {
+      throw new ApiError(400, 'One or more files are not valid JPEG, PNG or WEBP images.');
+    }
+
+    const [existingCount] = await pool.query('SELECT COUNT(*) AS c FROM property_images WHERE property_id = ?', [id]);
+    let sortOrder = existingCount[0].c;
+    const inserted = [];
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      for (const file of req.files) {
+        const relativePath = `/uploads/properties/${file.filename}`;
+        const isFeatured = sortOrder === 0 ? 1 : 0;
+        const [result] = await connection.query(
+          'INSERT INTO property_images (property_id, image_path, alt_text, is_featured, sort_order) VALUES (?, ?, ?, ?, ?)',
+          [id, relativePath, String(req.body.alt_text || '').trim().slice(0, 255), isFeatured, sortOrder]
+        );
+        inserted.push({ id: result.insertId, image_path: relativePath });
+        sortOrder += 1;
+      }
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+
+    keepFiles = true;
+    res.status(201).json({ success: true, data: inserted });
+  } finally {
+    if (!keepFiles) await removeUploadedFiles(req.files);
+  }
 });
 
 const deleteImage = asyncHandler(async (req, res) => {
@@ -350,8 +457,7 @@ const deleteImage = asyncHandler(async (req, res) => {
   if (rows.length === 0) throw new ApiError(404, 'Image not found.');
 
   await pool.query('DELETE FROM property_images WHERE id = ?', [imageId]);
-  const filePath = uploadedFilePath(rows[0].image_path);
-  if (filePath) fs.unlink(filePath, () => {});
+  await removeStoredImage(rows[0].image_path);
 
   res.json({ success: true, message: 'Image deleted.' });
 });

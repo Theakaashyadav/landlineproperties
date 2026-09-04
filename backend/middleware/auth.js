@@ -1,28 +1,51 @@
 const jwt = require('jsonwebtoken');
+const { pool } = require('../config/db');
+
+function requestToken(req) {
+  if (req.cookies && req.cookies.token) return req.cookies.token;
+  const authorization = req.headers.authorization;
+  if (authorization && /^Bearer\s+\S+$/i.test(authorization)) return authorization.replace(/^Bearer\s+/i, '');
+  return null;
+}
 
 /**
  * Verifies the JWT sent either as an httpOnly cookie ("token") or as an
  * Authorization: Bearer <token> header. Attaches { id, email, role } to req.user.
  */
-function authenticate(req, res, next) {
-  let token = null;
-
-  if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
-  } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
+async function authenticate(req, res, next) {
+  const token = requestToken(req);
   if (!token) {
     return res.status(401).json({ success: false, message: 'Authentication required.' });
   }
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Invalid or expired session. Please log in again.' });
+  }
+
+  if (!Number.isInteger(Number(decoded.id))) {
+    return res.status(401).json({ success: false, message: 'Invalid or expired session. Please log in again.' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, name, email, role, is_active, auth_version FROM users WHERE id = ? LIMIT 1',
+      [Number(decoded.id)]
+    );
+    const user = rows[0];
+    const tokenVersion = Number(decoded.ver || 0);
+    if (!user || !user.is_active || Number(user.auth_version || 0) !== tokenVersion) {
+      return res.status(401).json({ success: false, message: 'Your session is no longer active. Please log in again.' });
+    }
+
+    // Authorization always uses current database state, never stale JWT claims.
+    req.user = { id: user.id, name: user.name, email: user.email, role: user.role };
+    req.auth = { tokenVersion };
+    return next();
+  } catch (error) {
+    return next(error);
   }
 }
 
@@ -41,4 +64,4 @@ function authorize(...allowedRoles) {
   };
 }
 
-module.exports = { authenticate, authorize };
+module.exports = { authenticate, authorize, requestToken };

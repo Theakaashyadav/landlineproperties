@@ -40,8 +40,9 @@
   const image = path => !path ? fallback : (/^https?:/i.test(path) ? path : `${ORIGIN}${path}`);
   const price = (value, label, purpose) => {
     if (label) return esc(label);
+    if (value === null || value === undefined || value === '') return 'Price on request';
     const number = Number(value);
-    if (!Number.isFinite(number)) return 'Price on request';
+    if (!Number.isFinite(number) || number <= 0) return 'Price on request';
     const formatted = number >= 1e7 ? `₹${(number / 1e7).toFixed(2)} Cr`
       : number >= 1e5 ? `₹${(number / 1e5).toFixed(2)} Lakh`
         : `₹${number.toLocaleString('en-IN')}`;
@@ -50,7 +51,7 @@
 
   function card(property) {
     const badge = property.featured ? 'FEATURED' : property.verified ? 'VERIFIED' : property.new_launch ? 'NEW LAUNCH' : '';
-    return `<article class="card"><div class="card-img"><img src="${esc(image(property.cover_image))}" alt="${esc(`${property.title} in ${property.city}`)}" width="900" height="600" loading="lazy">${badge ? `<span class="badge">${badge}</span>` : ''}</div><div class="card-body"><h2>${esc(property.title)}</h2><p class="location">${esc([property.locality, property.city].filter(Boolean).join(', '))}</p><div class="details">${property.bhk ? `<span>${esc(property.bhk)}</span>` : ''}${property.area ? `<span>${esc(property.area)} ${esc(property.area_unit || 'Sq.Ft.')}</span>` : ''}</div><p class="price">${price(property.price, property.price_label, property.purpose)}</p><div class="card-actions"><a class="btn" href="property-details.html?slug=${encodeURIComponent(property.slug)}">View Property</a><a class="btn btn-dark" href="contact.html?property=${encodeURIComponent(property.id)}">Enquire</a></div></div></article>`;
+    return `<article class="card"><div class="card-img"><img src="${esc(image(property.cover_image))}" alt="${esc(`${property.title} in ${property.city}`)}" width="900" height="600" loading="lazy" decoding="async">${badge ? `<span class="badge">${badge}</span>` : ''}</div><div class="card-body"><h2>${esc(property.title)}</h2><p class="location">${esc([property.locality, property.city].filter(Boolean).join(', '))}</p><div class="details">${property.bhk ? `<span>${esc(property.bhk)}</span>` : ''}${property.area ? `<span>${esc(property.area)} ${esc(property.area_unit || 'Sq.Ft.')}</span>` : ''}</div><p class="price">${price(property.price, property.price_label, property.purpose)}</p><div class="card-actions"><a class="btn" href="property-details.html?slug=${encodeURIComponent(property.slug)}">View Property</a><a class="btn btn-dark" href="contact.html?property=${encodeURIComponent(property.id)}">Enquire</a></div></div></article>`;
   }
 
   function queryForPage(defaultPurpose) {
@@ -94,16 +95,37 @@
 
   async function loadSelected(grid, query, empty) {
     if (!grid) return;
-    if (grid.dataset.fallbackHtml === undefined) grid.dataset.fallbackHtml = grid.innerHTML;
-    const original = grid.dataset.fallbackHtml;
     grid.setAttribute('aria-busy', 'true');
+    grid.innerHTML = stateMarkup('Loading current properties…');
     try {
       const result = await request(`/properties?${query}`);
-      if (result.data.length) grid.innerHTML = result.data.map(card).join('');
-      else if (empty) grid.innerHTML = stateMarkup(empty);
+      const properties = Array.isArray(result.data) ? result.data : [];
+      grid.innerHTML = properties.length ? properties.map(card).join('') : stateMarkup(empty || 'No published properties are available right now. Please check back soon or contact our team.');
     } catch (error) {
-      grid.innerHTML = original;
-      console.warn('Property API unavailable:', error.message);
+      grid.innerHTML = stateMarkup(error.message, true);
+      grid.querySelector('[data-api-retry]')?.addEventListener('click', () => loadSelected(grid, query, empty), { once: true });
+    } finally {
+      grid.removeAttribute('aria-busy');
+    }
+  }
+
+  function projectCard(project) {
+    const projectPrice = price(project.starting_price, '', 'Buy');
+    const badge = project.is_new_launch ? 'NEW LAUNCH' : project.is_upcoming ? 'UPCOMING' : project.is_premium ? 'PREMIUM' : '';
+    return `<article class="card"><div class="card-img"><img src="${esc(image(project.cover_image || project.featured_image))}" alt="${esc(`${project.name} in ${project.city}`)}" width="900" height="600" loading="lazy" decoding="async">${badge ? `<span class="badge">${badge}</span>` : ''}</div><div class="card-body"><h2>${esc(project.name)}</h2><p class="location">${esc(project.city)}</p><div class="details">${project.configuration ? `<span>${esc(project.configuration)}</span>` : ''}${project.developer ? `<span>${esc(project.developer)}</span>` : ''}</div><p class="price">${projectPrice === 'Price on request' ? projectPrice : `Starting ${projectPrice}`}</p><div class="card-actions"><a class="btn" href="project-details.html?slug=${encodeURIComponent(project.slug)}">View Project</a><a class="btn btn-dark" href="contact.html?requirement=project-enquiry&project=${encodeURIComponent(project.id)}">Enquire</a></div></div></article>`;
+  }
+
+  async function loadProjectsSelected(grid, query, empty) {
+    if (!grid) return;
+    grid.setAttribute('aria-busy', 'true');
+    grid.innerHTML = stateMarkup('Loading current projects…');
+    try {
+      const result = await request(`/projects?${query}`);
+      const projects = Array.isArray(result.data) ? result.data : [];
+      grid.innerHTML = projects.length ? projects.map(projectCard).join('') : stateMarkup(empty || 'No published projects are available right now.');
+    } catch (error) {
+      grid.innerHTML = stateMarkup(error.message, true);
+      grid.querySelector('[data-api-retry]')?.addEventListener('click', () => loadProjectsSelected(grid, query, empty), { once: true });
     } finally {
       grid.removeAttribute('aria-busy');
     }
@@ -139,6 +161,31 @@
     box.style.color = error ? '#b42318' : '#18794e';
   }
 
+  function prefillLeadForm(form) {
+    const params = new URLSearchParams(location.search);
+    const aliases = {
+      'location-assistance': 'Location assistance',
+      'investment-consultation': 'Investment consultation',
+      'project-enquiry': 'Project enquiry',
+      buy: 'Buy Property', rent: 'Rent Property', sell: 'Sell Property', commercial: 'Commercial Property'
+    };
+    ['location', 'budget', 'requirement'].forEach((name) => {
+      const field = form.elements[name];
+      let value = params.get(name);
+      if (!field || !value) return;
+      if (name === 'requirement') value = aliases[value.toLowerCase()] || value;
+      if (field instanceof HTMLSelectElement && ![...field.options].some((option) => option.value === value)) {
+        field.add(new Option(value, value));
+      }
+      field.value = value;
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const context = [];
+    if (params.get('project')) context.push(`Project ID: ${params.get('project')}`);
+    if (params.get('type')) context.push(`Preferred property type: ${params.get('type')}`);
+    if (context.length && form.elements.message && !form.elements.message.value) form.elements.message.value = context.join('\n');
+  }
+
   function wireForm(form, endpoint, source) {
     form.addEventListener('submit', async event => {
       event.preventDefault();
@@ -146,6 +193,10 @@
       const label = button?.textContent;
       if (button) { button.disabled = true; button.textContent = 'Submitting…'; }
       const values = Object.fromEntries(new FormData(form));
+      Object.entries(values).forEach(([key, value]) => {
+        if (typeof value === 'string') values[key] = value.trim();
+        if (values[key] === '') delete values[key];
+      });
       if (values.bhk && !/^Select /i.test(values.bhk)) values.message = [values.message, `BHK: ${values.bhk}`].filter(Boolean).join('\n');
       delete values.bhk;
       try {
@@ -166,10 +217,13 @@
     if (page === 'featured-properties.html') loadListing('Buy');
     if (page === 'rent.html') loadListing('Rent');
     if (page === 'new-projects.html') loadSelected(document.getElementById('new-project-grid'), 'new_launch=true&limit=12', 'No new launches are published yet. Contact our team for current project opportunities.');
-    if (page === 'index.html') loadSelected(document.getElementById('home-property-grid'), 'featured=true&limit=3');
+    if (page === 'index.html') {
+      loadSelected(document.getElementById('home-property-grid'), 'featured=true&limit=3', 'No featured properties are published right now. Browse all current properties or contact our team.');
+      loadProjectsSelected(document.getElementById('home-project-grid'), 'limit=3', 'No published projects are available right now. Browse the projects page for updates.');
+    }
     if (page === 'property-details.html') loadDetails();
-    document.querySelectorAll('[data-landline-lead-form]').forEach(form => wireForm(form, '/leads', 'website'));
+    document.querySelectorAll('[data-landline-lead-form]').forEach(form => { prefillLeadForm(form); wireForm(form, '/leads', 'website'); });
     document.querySelectorAll('[data-landline-listing-form]').forEach(form => wireForm(form, '/list-property'));
   });
-  window.LandlineAPI = { request, card, image, price, apiOrigin: ORIGIN };
+  window.LandlineAPI = { request, card, projectCard, image, price, apiOrigin: ORIGIN };
 })();

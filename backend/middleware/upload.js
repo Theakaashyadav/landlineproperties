@@ -24,7 +24,10 @@ function makeStorage(subfolder) {
 function fileFilter(req, file, cb) {
   const ext = path.extname(file.originalname).toLowerCase();
   if (!ALLOWED_MIME.includes(file.mimetype) || !ALLOWED_EXT.includes(ext)) {
-    return cb(new Error('Only JPEG, PNG and WEBP images are allowed.'));
+    const error = new Error('Only JPEG, PNG and WEBP images are allowed.');
+    error.statusCode = 400;
+    error.code = 'INVALID_FILE_TYPE';
+    return cb(error);
   }
   cb(null, true);
 }

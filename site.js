@@ -1,4 +1,62 @@
+function applyLandlineContactSettings(data, root = document) {
+  if (!data || !root) return;
+  const phone = String(data.phone || '').replace(/[^+\d]/g, '');
+  const whatsapp = String(data.whatsapp || data.phone || '').replace(/\D/g, '');
+  const selectAll = (selector) => {
+    const matches = root.matches?.(selector) ? [root] : [];
+    return [...matches, ...(root.querySelectorAll?.(selector) || [])];
+  };
+  if (phone) {
+    const digits = phone.replace(/\D/g, '');
+    const displayPhone = data.phone_display || (digits.length === 12 && digits.startsWith('91')
+      ? `+91 ${digits.slice(2, 7)} ${digits.slice(7)}`
+      : String(data.phone || '').trim());
+    selectAll('a[href^="tel:"]').forEach((link) => {
+      link.href = `tel:${phone}`;
+      if (link.matches('[data-site-phone]')) link.textContent = displayPhone;
+    });
+    selectAll('[data-site-phone]:not(a)').forEach((element) => { element.textContent = displayPhone; });
+  }
+  if (whatsapp) selectAll('a[href*="wa.me/"]').forEach((link) => {
+    const query = new URL(link.href, window.location.href).search;
+    link.href = `https://wa.me/${whatsapp}${query}`;
+  });
+  if (data.email) selectAll('a[href^="mailto:"]').forEach((link) => {
+    link.href = `mailto:${data.email}`;
+    if (link.matches('[data-site-email]') || link.textContent.includes('@')) link.textContent = data.email;
+  });
+}
+window.applyLandlineContactSettings = applyLandlineContactSettings;
+
 document.addEventListener('DOMContentLoaded', () => {
+  const main = document.querySelector('main');
+  if (main) {
+    if (!main.id) main.id = 'main-content';
+    if (!document.querySelector('.skip-link')) {
+      const skipLink = document.createElement('a');
+      skipLink.className = 'skip-link';
+      skipLink.href = `#${main.id}`;
+      skipLink.textContent = 'Skip to main content';
+      document.body.prepend(skipLink);
+    }
+  }
+
+  // Repair common authored accessibility relationships in one shared place.
+  document.querySelectorAll('label:not([for])').forEach((label, index) => {
+    if (label.querySelector('input, select, textarea')) return;
+    const control = label.nextElementSibling;
+    if (!control?.matches('input, select, textarea')) return;
+    if (!control.id) control.id = `field-${index + 1}`;
+    label.htmlFor = control.id;
+  });
+  document.querySelectorAll('dialog').forEach((dialog, index) => {
+    if (dialog.hasAttribute('aria-label') || dialog.hasAttribute('aria-labelledby')) return;
+    const heading = dialog.querySelector('h1, h2, h3');
+    if (!heading) return;
+    if (!heading.id) heading.id = `dialog-title-${index + 1}`;
+    dialog.setAttribute('aria-labelledby', heading.id);
+  });
+
   if (!document.querySelector('link[rel="canonical"]')) {
     const canonical = document.createElement('link');
     canonical.rel = 'canonical';
@@ -40,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.body.insertAdjacentHTML('beforeend', `
     <aside class="wa-widget" aria-label="WhatsApp chat">
-      <div class="wa-widget__panel" role="dialog" aria-label="Chat with Landline Properties">
+      <div class="wa-widget__panel" role="dialog" aria-label="Chat with Landline Properties" aria-hidden="true">
         <div class="wa-widget__header">
           <span class="wa-widget__brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.52 3.48A11.78 11.78 0 0 0 12.08 0C5.53 0 .2 5.33.2 11.88c0 2.09.55 4.13 1.59 5.92L.1 24l6.36-1.67a11.86 11.86 0 0 0 5.62 1.43h.01c6.55 0 11.88-5.33 11.88-11.88 0-3.17-1.23-6.15-3.45-8.4Zm-8.44 18.27h-.01a9.85 9.85 0 0 1-5.02-1.37l-.36-.21-3.78.99 1.01-3.68-.24-.38a9.85 9.85 0 0 1-1.51-5.23c0-5.44 4.43-9.87 9.88-9.87a9.8 9.8 0 0 1 6.98 2.9 9.8 9.8 0 0 1 2.89 6.99c0 5.45-4.43 9.88-9.87 9.88Zm5.41-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.39-1.48a8.95 8.95 0 0 1-1.65-2.05c-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.08-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.09 4.49.71.31 1.27.49 1.7.63.71.23 1.35.2 1.86.12.57-.08 1.76-.72 2.01-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35Z"/></svg></span>
           <div><h2>Chat with us</h2><span class="wa-widget__status">Typically replies instantly</span></div>
@@ -63,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   `);
 
   const whatsappWidget = document.querySelector('.wa-widget');
+  const whatsappPanel = whatsappWidget.querySelector('.wa-widget__panel');
   const whatsappToggle = whatsappWidget.querySelector('.wa-widget__toggle');
   const whatsappClose = whatsappWidget.querySelector('.wa-widget__close');
   const officialWhatsappIcon = whatsappWidget.querySelector('.wa-widget__brand-icon svg');
@@ -71,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
   whatsappToggle.replaceChildren(officialWhatsappIcon.cloneNode(true), whatsappBadge);
   const setWhatsappOpen = (open) => {
     whatsappWidget.classList.toggle('is-open', open);
+    whatsappPanel.setAttribute('aria-hidden', String(!open));
     whatsappToggle.setAttribute('aria-expanded', String(open));
     whatsappToggle.setAttribute('aria-label', open ? 'Close WhatsApp chat' : 'Open WhatsApp chat');
   };
@@ -103,17 +163,22 @@ document.addEventListener('DOMContentLoaded', () => {
   whatsappClose.addEventListener('click', () => {
     cancelWhatsappAutoPopup();
     setWhatsappOpen(false);
+    whatsappToggle.focus();
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       cancelWhatsappAutoPopup();
+      const wasOpen = whatsappWidget.classList.contains('is-open');
       setWhatsappOpen(false);
+      if (wasOpen) whatsappToggle.focus();
     }
   });
 
   const nav = document.querySelector('.navbar');
   const links = document.querySelector('.nav-links');
   if (!nav || !links) return;
+  links.setAttribute('role', 'navigation');
+  links.setAttribute('aria-label', 'Primary navigation');
 
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const activePage = {
@@ -185,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const existingFooter = document.querySelector('footer');
   if (existingFooter) {
-    existingFooter.outerHTML = `<footer class="professional-footer"><div class="container"><div class="footer-top"><div><a class="footer-logo-box" href="index.html" aria-label="Landline Properties home"><img src="image/Landline.png" alt="LANDLINE PROPERTIES"></a><p>Landline Properties is your trusted real estate connection for property buying, renting, new projects and local broker assistance across Delhi NCR.</p></div><div><h2>Quick Links</h2><nav class="footer-links" aria-label="Quick links"><a href="index.html">Home</a><a href="featured-properties.html">Buy Property</a><a href="rent.html">Rent Property</a><a href="new-projects.html">New Projects</a><a href="gallery-profile.html">Gallery</a><a href="about.html">About Us</a></nav></div><div><h2>Property Links</h2><nav class="footer-links" aria-label="Property links"><a href="featured-properties.html">Properties for Sale</a><a href="rent.html">Properties for Rent</a><a href="new-projects.html">New Launch Projects</a><a href="property-details.html">Property Details</a><a href="list-property.html">List Your Property</a></nav></div><div><h2>Contact Landline</h2><div class="footer-contact"><a href="locations.html">Gurgaon · Noida · Greater Noida · Delhi NCR</a><a href="tel:+919876543210">+91 98765 43210</a><a href="mailto:hello@landline.com">hello@landline.com</a></div><div class="footer-actions"><a class="whatsapp" href="https://wa.me/919876543210" target="_blank" rel="noopener">WhatsApp</a><a href="tel:+919876543210">Call Now</a></div></div></div><div class="footer-bottom"><span>© 2026 Landline Properties. All Rights Reserved.</span><nav class="footer-legal" aria-label="Legal links"><a href="locations.html">Popular Locations</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms-and-conditions.html">Terms &amp; Conditions</a><a href="contact.html">Contact</a></nav></div></div></footer>`;
+    existingFooter.outerHTML = `<footer class="professional-footer"><div class="container"><div class="footer-top"><div><a class="footer-logo-box" href="index.html" aria-label="Landline Properties home"><img src="image/Landline.png" alt="Landline Properties" width="96" height="68" loading="lazy"></a><p>Landline Properties is your trusted real estate connection for property buying, renting, new projects and local broker assistance across Delhi NCR.</p></div><div><h2>Quick Links</h2><nav class="footer-links" aria-label="Quick links"><a href="index.html">Home</a><a href="featured-properties.html">Buy Property</a><a href="rent.html">Rent Property</a><a href="new-projects.html">New Projects</a><a href="gallery-profile.html">Gallery</a><a href="about.html">About Us</a></nav></div><div><h2>Property Links</h2><nav class="footer-links" aria-label="Property links"><a href="featured-properties.html">Properties for Sale</a><a href="rent.html">Properties for Rent</a><a href="new-projects.html">New Launch Projects</a><a href="locations.html">Browse by Location</a><a href="list-property.html">List Your Property</a></nav></div><div><h2>Contact Landline</h2><div class="footer-contact"><a href="locations.html">Gurgaon · Noida · Greater Noida · Delhi NCR</a><a href="tel:+919876543210" data-site-phone>+91 98765 43210</a><a href="mailto:hello@landline.com">hello@landline.com</a></div><div class="footer-actions"><a class="whatsapp" href="https://wa.me/919876543210" target="_blank" rel="noopener">WhatsApp</a><a href="tel:+919876543210">Call Now</a></div></div></div><div class="footer-bottom"><span>© 2026 Landline Properties. All Rights Reserved.</span><nav class="footer-legal" aria-label="Legal links"><a href="locations.html">Popular Locations</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms-and-conditions.html">Terms &amp; Conditions</a><a href="contact.html">Contact</a></nav></div></div></footer>`;
   }
 });
 
@@ -315,14 +380,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const response = await fetch(`${origin}/api/settings/public`);
     if (!response.ok) return;
     const { data = {} } = await response.json();
-    const phone = String(data.phone || '').replace(/[^+\d]/g, '');
-    const whatsapp = String(data.whatsapp || data.phone || '').replace(/\D/g, '');
-    if (phone) document.querySelectorAll('a[href^="tel:"]').forEach((link) => { link.href = `tel:${phone}`; });
-    if (whatsapp) document.querySelectorAll('a[href*="wa.me/"]').forEach((link) => {
-      const query = new URL(link.href).search;
-      link.href = `https://wa.me/${whatsapp}${query}`;
+    window.LANDLINE_SITE_SETTINGS = data;
+    applyLandlineContactSettings(data);
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) applyLandlineContactSettings(data, node);
+      }));
     });
-    if (data.email) document.querySelectorAll('a[href^="mailto:"]').forEach((link) => { link.href = `mailto:${data.email}`; if (link.textContent.includes('@')) link.textContent = data.email; });
+    observer.observe(document.body, { childList: true, subtree: true });
   } catch {
     // Static fallback details remain usable when the API is unavailable.
   }

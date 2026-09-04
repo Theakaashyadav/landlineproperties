@@ -9,26 +9,26 @@
 </head>
 <body>
 
-<div class="login-wrap">
-  <div class="login-card">
-    <div class="brand">LAND<span>LINE</span></div>
+<main class="login-wrap">
+  <section class="login-card" aria-labelledby="login-title">
+    <h1 class="brand" id="login-title">LAND<span>LINE</span></h1>
     <div class="sub">Admin Dashboard Login</div>
 
-    <div class="error-box" id="error-box"></div>
+    <div class="error-box" id="error-box" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
 
     <form id="login-form">
       <div class="form-field">
-        <label>Email</label>
-        <input type="email" id="email" required autocomplete="username" placeholder="admin@landline.com">
+        <label for="email">Email</label>
+        <input type="email" id="email" required maxlength="190" autocomplete="username" inputmode="email" spellcheck="false" placeholder="admin@landline.com">
       </div>
       <div class="form-field">
-        <label>Password</label>
-        <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
+        <label for="password">Password</label>
+        <input type="password" id="password" required minlength="8" maxlength="128" autocomplete="current-password" placeholder="••••••••">
       </div>
       <button type="submit" class="btn btn-primary" id="submit-btn">Log In</button>
     </form>
-  </div>
-</div>
+  </section>
+</main>
 
 <script src="js/admin-core.js"></script>
 <script>
@@ -40,13 +40,15 @@
     e.preventDefault();
     const errorBox = document.getElementById('error-box');
     const btn = document.getElementById('submit-btn');
-    errorBox.style.display = 'none';
+    errorBox.hidden = true;
+    errorBox.textContent = '';
 
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
     btn.disabled = true;
     btn.textContent = 'Logging in...';
+    btn.setAttribute('aria-busy', 'true');
 
     try {
       const res = await apiRequest('/auth/login', { method: 'POST', body: { email, password } });
@@ -54,9 +56,11 @@
       window.location.href = 'dashboard.html';
     } catch (err) {
       errorBox.textContent = err.message || 'Login failed.';
-      errorBox.style.display = 'block';
+      errorBox.hidden = false;
+      errorBox.focus();
       btn.disabled = false;
       btn.textContent = 'Log In';
+      btn.removeAttribute('aria-busy');
     }
   });
   }

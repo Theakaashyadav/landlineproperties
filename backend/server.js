@@ -22,6 +22,7 @@ const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
 const frontendDir = path.resolve(__dirname, '..');
+const productionAssetMaxAge = process.env.NODE_ENV === 'production' ? '7d' : 0;
 if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32 || process.env.JWT_SECRET.includes('replace_this')) {
@@ -71,7 +72,14 @@ app.use(cookieParser());
 // Serve the CMS from the same HTTP origin as the API. This prevents browsers
 // from assigning the admin pages a unique `file://` origin when login.html is
 // opened directly from disk.
-app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
+app.use('/admin', express.static(path.join(frontendDir, 'admin'), {
+  dotfiles: 'deny',
+  etag: true,
+  maxAge: productionAssetMaxAge,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
 
 // General API rate limit (separate, stricter limiters exist on login/leads)
 app.use('/api', rateLimit({
@@ -109,7 +117,7 @@ const publicPages = [
   '', 'featured-properties.html', 'rent.html', 'investment.html', 'new-projects.html',
   'gallery-profile.html', 'locations.html', 'gurgaon-properties.html',
   'noida-properties.html', 'greater-noida-properties.html', 'delhi-properties.html',
-  'about.html', 'contact.html', 'list-property.html',
+  'about.html', 'contact.html', 'list-property.html', 'property-details.html', 'project-details.html',
   'privacy-policy.html', 'terms-and-conditions.html'
 ];
 app.get('/robots.txt', (req, res) => {
@@ -132,19 +140,35 @@ app.get('/sitemap.xml', async (req, res, next) => {
   }
 });
 
-// One production frontend. Private source/config folders are never web-served.
-app.use(['/backend', '/database', '/landline-properties-cms', '/.vscode'], (req, res) => {
-  res.status(404).send('Not found');
-});
-app.use(express.static(frontendDir, {
-  index: 'index.html',
+// Serve only known public asset directories and single root files. Never mount
+// the repository root: encoded paths such as /%62ackend/server.js must not be
+// able to reach application source, the database schema or future backups.
+const publicStaticOptions = {
   dotfiles: 'deny',
   etag: true,
-  maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0,
+  maxAge: productionAssetMaxAge,
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
   }
-}));
+};
+app.use('/image', express.static(path.join(frontendDir, 'image'), publicStaticOptions));
+app.use('/js', express.static(path.join(frontendDir, 'js'), publicStaticOptions));
+
+const publicRootExtensions = new Set([
+  '.html', '.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.webmanifest'
+]);
+app.get('/', (req, res, next) => {
+  res.sendFile(path.join(frontendDir, 'index.html'), publicStaticOptions, (error) => error && next(error));
+});
+app.get('/:file', (req, res, next) => {
+  const file = req.params.file;
+  if (path.basename(file) !== file || !publicRootExtensions.has(path.extname(file).toLowerCase())) return next();
+  res.sendFile(path.join(frontendDir, file), publicStaticOptions, (error) => {
+    if (!error) return;
+    if (error.statusCode === 404) return next();
+    next(error);
+  });
+});
 
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found.' }));
 

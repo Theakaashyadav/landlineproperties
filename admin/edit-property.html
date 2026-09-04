@@ -22,7 +22,19 @@
     </div>
 
     <div class="content">
-      <form id="property-form">
+      <form id="property-form" aria-labelledby="form-title">
+        <div id="form-error" class="form-error" role="alert" tabindex="-1" hidden></div>
+        <p class="required-note">Fields marked with an asterisk (*) are required. Clear an optional field and save to remove its stored value.</p>
+
+        <section class="panel private-panel" id="submission-contact-panel" aria-labelledby="submission-contact-title" hidden>
+          <h3 id="submission-contact-title">Owner submission contact <span class="badge pending">Private</span></h3>
+          <p class="privacy-note">Visible only in the authenticated admin workflow. Use these details solely to review and respond to this property submission.</p>
+          <dl class="contact-grid">
+            <div><dt>Name</dt><dd id="submitter-name">Not supplied</dd></div>
+            <div><dt>Phone</dt><dd><a id="submitter-phone">Not supplied</a></dd></div>
+            <div><dt>Email</dt><dd><a id="submitter-email">Not supplied</a></dd></div>
+          </dl>
+        </section>
         <div class="panel">
           <h3>Basic Details</h3>
           <div class="form-grid">
@@ -106,10 +118,12 @@
               </select>
             </div>
             <div class="form-field">
-              <label>&nbsp;</label>
-              <div class="checkbox-row"><input type="checkbox" id="featured"><label>Featured</label></div>
-              <div class="checkbox-row"><input type="checkbox" id="verified"><label>Verified</label></div>
-              <div class="checkbox-row"><input type="checkbox" id="new_launch"><label>New Launch</label></div>
+              <span class="sr-only" id="property-flags-label">Property flags</span>
+              <div role="group" aria-labelledby="property-flags-label">
+                <div class="checkbox-row"><input type="checkbox" id="featured"><label for="featured">Featured</label></div>
+                <div class="checkbox-row"><input type="checkbox" id="verified"><label for="verified">Verified</label></div>
+                <div class="checkbox-row"><input type="checkbox" id="new_launch"><label for="new_launch">New Launch</label></div>
+              </div>
             </div>
           </div>
         </div>
@@ -125,8 +139,9 @@
 
         <div class="panel">
           <h3>Images</h3>
-          <p class="hint" style="margin-top:-6px;">JPEG, PNG or WEBP, up to 5MB each.</p>
-          <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp" multiple>
+          <p class="hint" id="image-help" style="margin-top:-6px;">JPEG, PNG or WEBP, up to 5 MB each and 20 images per upload.</p>
+          <label for="image-input" class="sr-only">Select property images</label>
+          <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp" aria-describedby="image-help" multiple>
           <div id="image-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:16px;"></div>
         </div>
 

@@ -12,24 +12,32 @@ const submitListing = asyncHandler(async (req, res) => {
     purpose, price, description
   } = req.body;
 
-  if (!name || !phone || !property_type || !city) {
-    throw new ApiError(400, 'Name, phone, property type and city are required.');
+  if (!name || !phone || !property_type || !city || !purpose) {
+    throw new ApiError(400, 'Name, phone, property type, purpose and city are required.');
   }
 
   const phoneClean = String(phone).replace(/[^\d+]/g, '');
   if (phoneClean.length < 8) throw new ApiError(400, 'Please provide a valid phone number.');
 
-  const title = `${property_type} in ${locality ? locality + ', ' : ''}${city} (Owner Submitted)`;
+  const normalizedType = String(property_type).trim();
+  const normalizedCity = String(city).trim();
+  const normalizedLocality = locality ? String(locality).trim() : '';
+  const titleSuffix = ' (Owner Submitted)';
+  const descriptiveTitle = `${normalizedType} in ${normalizedLocality ? `${normalizedLocality}, ` : ''}${normalizedCity}`;
+  const title = `${descriptiveTitle.slice(0, 255 - titleSuffix.length).trim()}${titleSuffix}`;
   const slug = await generateUniqueSlug(pool, 'properties', title);
+  const hasPrice = price !== undefined && price !== null && price !== '';
+  const normalizedPrice = hasPrice ? Number(price) : null;
 
   const [result] = await pool.query(
     `INSERT INTO properties
-      (title, slug, property_type, purpose, price, city, locality, description, status,
+      (title, slug, property_type, purpose, price, price_label, city, locality, description, status,
        is_user_submitted, submitted_by_name, submitted_by_phone, submitted_by_email)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 1, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 1, ?, ?, ?)`,
     [
-      title, slug, property_type, purpose || 'Buy', price || 0, city, locality || null,
-      description || null, String(name).trim().slice(0, 150),
+      title, slug, normalizedType, purpose, normalizedPrice,
+      hasPrice ? null : 'Price on request', normalizedCity, normalizedLocality || null,
+      description ? String(description).trim() : null, String(name).trim().slice(0, 150),
       phoneClean.slice(0, 20),
       email ? String(email).trim().slice(0, 190) : null
     ]

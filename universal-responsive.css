@@ -1,6 +1,9 @@
 /* Universal fluid safeguards shared by every public page. */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:88px}
 body{min-width:0}
+.skip-link{position:fixed;z-index:5000;top:8px;left:8px;padding:10px 14px;border-radius:6px;background:#18202a;color:#fff;font-weight:700;transform:translateY(-150%)}
+.skip-link:focus{transform:none}
+.hero .eyebrow,.dark .eyebrow,.about-hero .about-kicker,.markets .about-kicker,.values .about-kicker,.about-cta .about-kicker{color:#e7c77e}
 img,svg,video,canvas,iframe{max-width:100%;height:auto}
 img{display:block}
 main,section,header,footer,.container,.navbar,.grid,.content-grid,.contact-wrapper,.card,.card-body{min-width:0}
@@ -87,7 +90,7 @@ button,.btn,a.btn{touch-action:manipulation}
  .lightbox{padding-block:12px!important}.lightbox img{max-height:calc(100dvh - 82px)!important}.lightbox-close{top:8px!important;right:8px!important}
 }
 
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 
 /* Switch to the compact menu before the full navigation can collide with the logo/actions. */
 @media(max-width:1100px){
