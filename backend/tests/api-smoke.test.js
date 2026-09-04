@@ -9,9 +9,11 @@ process.env.MONGODB_DB_NAME = 'landline_properties_test';
 
 const database = require('../config/db');
 const { Property, PropertyImage } = require('../models');
+const databaseInitializer = require('../services/initializeDatabase');
 
 database.testConnection = async () => true;
 database.connectDatabase = async () => true;
+databaseInitializer.ensureDatabaseInitialized = async () => true;
 
 function queryResult(value) {
   return {

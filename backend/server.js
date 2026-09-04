@@ -11,6 +11,7 @@ const database = require('./config/db');
 const { Property, Project } = require('./models');
 const { errorHandler } = require('./middleware/errorHandler');
 const { isHostingerRuntime, isProductionRuntime } = require('./utils/runtime');
+const databaseInitializer = require('./services/initializeDatabase');
 
 const authRoutes = require('./routes/authRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
@@ -97,12 +98,15 @@ app.use('/api', rateLimit({
 // API request wait for the shared MongoDB connection (and retry after a failed
 // initial startup connection) before a controller accesses a model.
 app.use('/api', (req, res, next) => {
-  database.connectDatabase().then(() => next()).catch((cause) => {
-    const error = new Error('Database temporarily unavailable.');
-    error.statusCode = 503;
-    error.cause = cause;
-    next(error);
-  });
+  database.connectDatabase()
+    .then(() => databaseInitializer.ensureDatabaseInitialized())
+    .then(() => next())
+    .catch((cause) => {
+      const error = new Error('Database temporarily unavailable.');
+      error.statusCode = 503;
+      error.cause = cause;
+      next(error);
+    });
 });
 
 // Serve uploaded images
@@ -206,7 +210,9 @@ function startServer() {
   runningServer = app.listen(PORT, () => {
     console.log(`Landline Properties API running on http://localhost:${PORT}`);
   });
-  database.testConnection({ exitOnFailure: false }).catch(() => {});
+  database.testConnection({ exitOnFailure: false })
+    .then(() => databaseInitializer.ensureDatabaseInitialized())
+    .catch(() => {});
   return runningServer;
 }
 

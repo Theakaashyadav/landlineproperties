@@ -34,8 +34,13 @@ collections or copy data from the database used by another website.
 2. Set `MONGODB_DB_NAME=landline_properties`.
 3. Give the application database user only `readWrite` access to
    `landline_properties`.
-4. Run `npm run seed:db` to create indexes, default locations and global settings.
-5. Set temporary `SEED_ADMIN_*` values and run `npm run seed:admin` once.
+4. Set temporary `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` and `SEED_ADMIN_NAME`
+   values if the database needs its first admin.
+5. Start or restart the application. The first successful connection creates the
+   dedicated database, collections, indexes, default locations and global settings.
+   It also creates the configured admin account.
 
-Both commands are idempotent: existing settings, locations and admin accounts are left
-unchanged.
+Automatic initialisation is idempotent: existing settings, locations and admin accounts
+are left unchanged. The `npm run seed:db` and `npm run seed:admin` commands are also
+available as manual alternatives. Remove `SEED_ADMIN_PASSWORD` from the runtime
+environment after the initial admin has been created and tested.
