@@ -7,7 +7,7 @@ const { logActivity } = require('../utils/activityLog');
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env.NODE_ENV === 'production' || Boolean(process.env.LSNODE_SOCKET),
   sameSite: 'lax',
   path: '/',
   maxAge: 8 * 60 * 60 * 1000 // 8 hours
@@ -65,7 +65,12 @@ const logout = asyncHandler(async (req, res) => {
       if (!['TokenExpiredError', 'JsonWebTokenError', 'NotBeforeError'].includes(error.name)) throw error;
     }
   }
-  res.clearCookie('token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production' || Boolean(process.env.LSNODE_SOCKET),
+    sameSite: 'lax',
+    path: '/'
+  });
   res.json({ success: true, message: 'Logged out.' });
 });
 

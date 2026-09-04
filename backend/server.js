@@ -23,8 +23,10 @@ const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
 const frontendDir = path.resolve(__dirname, '..');
-const productionAssetMaxAge = process.env.NODE_ENV === 'production' ? '7d' : 0;
-if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
+const hostingerRuntime = Boolean(process.env.LSNODE_SOCKET);
+const isProduction = process.env.NODE_ENV === 'production' || hostingerRuntime;
+const productionAssetMaxAge = isProduction ? '7d' : 0;
+if (isProduction) app.set('trust proxy', 1);
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32 || process.env.JWT_SECRET.includes('replace_this')) {
   throw new Error('JWT_SECRET must be set to a random value of at least 32 characters.');
@@ -190,7 +192,7 @@ app.use((req, res) => res.status(404).json({ success: false, message: 'Route not
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || (hostingerRuntime ? 3000 : 5000);
 
 let runningServer;
 

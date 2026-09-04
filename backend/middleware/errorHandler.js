@@ -35,7 +35,8 @@ function errorHandler(err, req, res, next) {
     return res.status(503).json({ success: false, message: 'Database temporarily unavailable.' });
   }
 
-  const message = status === 500 && process.env.NODE_ENV === 'production'
+  const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.LSNODE_SOCKET);
+  const message = status === 500 && isProduction
     ? 'Something went wrong. Please try again.'
     : err.message || 'Server error.';
 
