@@ -6,7 +6,7 @@ Production project containing one public frontend, the admin dashboard, a Node.j
 
 1. Start MongoDB locally or create a MongoDB Atlas cluster.
 2. In `backend`, copy `.env.example` to `.env`. Set `MONGODB_URI`, keep `MONGODB_DB_NAME=landline_properties`, and set a random `JWT_SECRET` of at least 32 characters, `SITE_URL`, and a strong seed-admin password.
-3. Install the dependencies:
+3. From the repository root, install the dependencies. The root Node package builds and serves both the public website and the admin API:
    `npm ci`
 4. Start the complete site. On its first successful MongoDB connection, the app
    automatically creates indexes, default locations and global settings. If valid

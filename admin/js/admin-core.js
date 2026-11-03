@@ -6,7 +6,7 @@ const IS_FILE_ORIGIN = location.protocol === 'file:';
 if (IS_FILE_ORIGIN) {
   window.__LANDLINE_FILE_ORIGIN__ = true;
   document.addEventListener('DOMContentLoaded', () => {
-    document.body.innerHTML = `<div style="font-family:Arial;max-width:720px;margin:60px auto;padding:32px;border-radius:16px;background:#111827;color:#fff"><h2>Admin app requires the server</h2><p>${FILE_ORIGIN_MESSAGE}</p><pre>cd backend\nnpm install\nnpm run dev</pre></div>`;
+    document.body.innerHTML = `<div style="font-family:Arial;max-width:720px;margin:60px auto;padding:32px;border-radius:16px;background:#111827;color:#fff"><h2>Admin app requires the server</h2><p>${FILE_ORIGIN_MESSAGE}</p><p>From the project root, run:</p><pre>npm ci\nnpm run dev</pre></div>`;
   });
 }
 
