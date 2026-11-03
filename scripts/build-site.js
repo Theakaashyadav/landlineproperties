@@ -18,6 +18,7 @@ const BUILD_MARKER = '.landline-static-build';
 const BUILD_MARKER_CONTENT = 'landline-properties-static-v1\n';
 
 function isRootPublicFile(name) {
+  if (name === '.htaccess') return true;
   return !name.startsWith('.') && name.toLowerCase() !== 'server.js' &&
     (ROOT_PUBLIC_EXTENSIONS.has(path.extname(name).toLowerCase()) || ['robots.txt', 'sitemap.xml'].includes(name));
 }

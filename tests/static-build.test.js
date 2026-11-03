@@ -24,13 +24,13 @@ function write(root, name, content = name) {
 test('the static artifact preserves public file contents and excludes server/admin/tooling files', t => {
   const root = fixture(t);
   const publicFiles = [
-    'index.html', 'contact.html', 'site.js', 'theme.css', 'robots.txt', 'sitemap.xml',
+    '.htaccess', 'index.html', 'contact.html', 'site.js', 'theme.css', 'robots.txt', 'sitemap.xml',
     'image/home/cover.jpg', 'image/home/SOURCES.txt', 'js/catalog.js'
   ];
   const privateFiles = [
     '.env', 'server.js', 'package.json', 'package-lock.json', 'README.md',
     'admin/login.html', 'admin/js/login.js', 'backend/server.js', 'database/data.json',
-    'scripts/preview-site.js', 'tests/example.test.js', 'node_modules/example/index.js',
+    'scripts/build-site.js', 'tests/example.test.js', 'node_modules/example/index.js',
     '.git/config', 'image/.hidden/private.jpg'
   ];
   for (const name of [...publicFiles, ...privateFiles]) write(root, name);
