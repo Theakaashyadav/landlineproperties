@@ -1,8 +1,8 @@
 (function () {
   'use strict';
 
-  // Researched 2 November 2026. This project directory is independent of unit
-  // inventory in the CMS. Unknown prices and specifications are left unset.
+  // Researched 2 November 2026. This project directory is bundled with the
+  // static website. Unknown prices and specifications are left unset.
   const projects = [
     {
       id: 'godrej-dmic', slug: 'godrej-dmic', name: 'Godrej GBC',

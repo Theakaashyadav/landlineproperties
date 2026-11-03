@@ -2,13 +2,10 @@
   'use strict';
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => [...c.querySelectorAll(s)];
-  const localPreview = location.protocol === 'file:' || (['localhost', '127.0.0.1'].includes(location.hostname) && location.port && location.port !== '5000');
-  const origin = String(window.LANDLINE_API_ORIGIN || (localPreview ? 'http://localhost:5000' : location.origin)).replace(/\/$/, '');
-  const api = `${origin}/api`;
   const fallback = 'image/home-hero-luxury-delhi-ncr.png';
   const PAGE_SIZE = 12;
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-  const image = (path) => !path ? fallback : /^https?:/i.test(path) ? path : `${origin}/${String(path).replace(/^\/+/, '')}`;
+  const image = (path) => !path ? fallback : /^(?:https?:)?\/\//i.test(path) ? path : String(path).replace(/^\/+/, '');
   let projects = [];
   let liveProjects = [];
   let catalogProjects = [];
@@ -111,10 +108,9 @@
     history.replaceState(null, '', `${location.pathname}${visible.size ? `?${visible}` : ''}${location.hash}`);
     if (scroll) $('#projects')?.scrollIntoView({ behavior: 'smooth' });
     try {
-      const response = await fetch(`${api}/projects?${params}`, { signal: currentController.signal });
-      const result = await response.json().catch(() => null);
+      const result = await window.LandlineData.request(`/projects?${params}`, { signal: currentController.signal });
       if (currentRequest !== requestNumber) return;
-      if (!response.ok || !result) throw new Error(result?.message || 'Unable to load projects.');
+      if (!result) throw new Error('Unable to load projects.');
       const incoming = Array.isArray(result.data) ? result.data : [];
       liveProjects = append
         ? [...liveProjects, ...incoming.filter((item) => !liveProjects.some((project) => projectKey(project) === projectKey(item) || (item.slug && project.slug === item.slug)))]
@@ -169,24 +165,9 @@
     wrap.innerHTML = list.length < 2 ? '<p>Select at least two projects to compare.</p>' : `<table class="comparison"><thead><tr><th>Project</th>${list.map((item) => `<th>${esc(item.name)}</th>`).join('')}</tr></thead><tbody>${['city', 'configuration', 'project_status', 'starting_price'].map((key) => `<tr><th>${key.replace('_', ' ')}</th>${list.map((item) => `<td>${key === 'starting_price' ? price(item[key]) : esc(item[key] || 'On request')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     wrap.scrollIntoView({ behavior: 'smooth' });
   }
-  async function submitLead(form) {
-    const button = form.querySelector('button'); const label = button.textContent; button.disabled = true; button.textContent = 'Submitting…';
-    const values = Object.fromEntries(new FormData(form));
-    try {
-      const catalog = catalogProject(values.project || form.dataset.projectSlug);
-      const projectId = !catalog && /^[1-9]\d*$/.test(String(values.project || '')) ? values.project : undefined;
-      const projectName = values.project_name || form.dataset.projectName || catalog?.name;
-      const contextLines = [
-        projectId ? `Project ID: ${projectId}` : '',
-        catalog?.slug ? `Project reference: ${catalog.slug}` : '',
-        projectName ? `Project: ${projectName}` : '',
-        values.type ? `Preferred configuration: ${values.type}` : ''
-      ];
-      const response = await fetch(`${api}/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: values.name, phone: values.phone || values.mobile, email: values.email, project_id: projectId, inquiry_type: values.type || undefined, location: values.location, budget: values.budget, requirement: 'Project enquiry', message: [values.message, ...contextLines].filter(Boolean).join('\n'), source: location.pathname.includes('project-details') ? 'project-details-page' : 'new-projects-page' }) });
-      const result = await response.json().catch(() => null); if (!response.ok) throw new Error(result?.message || 'Unable to submit request.');
-      $('.form-status', form).textContent = result.message || 'Thank you. Your request has been submitted.'; form.reset();
-    } catch (error) { const status = $('.form-status', form); status.textContent = error.message; status.style.color = '#b42318'; }
-    finally { button.disabled = false; button.textContent = label; }
+  function submitLead(form) {
+    if (!form.reportValidity()) return;
+    window.LandlineContact.openWhatsApp(window.LandlineContact.buildMessage(form));
   }
   document.addEventListener('click', (event) => {
     const quick = event.target.closest('[data-project-filter]');

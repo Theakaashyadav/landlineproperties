@@ -1,10 +1,8 @@
 (function () {
   'use strict';
-  const localPreview = location.protocol === 'file:' || (['localhost', '127.0.0.1'].includes(location.hostname) && location.port && location.port !== '5000');
-  const origin = String(window.LANDLINE_API_ORIGIN || (localPreview ? 'http://localhost:5000' : location.origin)).replace(/\/$/, '');
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   const fallback = 'image/home-hero-luxury-evening-v2.png';
-  const imageUrl = (path) => !path ? fallback : /^https?:/i.test(path) ? path : `${origin}${path}`;
+  const imageUrl = (path) => !path ? fallback : /^(?:https?:)?\/\//i.test(path) ? path : String(path).replace(/^\/+/, '');
   const money = (property) => {
     if (property.price_label) return escapeHtml(property.price_label);
     const value = Number(property.price);
@@ -21,9 +19,7 @@
       return;
     }
     try {
-      const response = await fetch(`${origin}/api/properties/${encodeURIComponent(slug)}`);
-      const result = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(result?.message || 'Property not found.');
+      const result = await window.LandlineData.request(`/properties/${encodeURIComponent(slug)}`);
       const property = result.data;
       const images = property.images?.length ? property.images : [{ image_path: null, alt_text: property.title }];
       const back = property.purpose === 'Rent' ? 'rent.html' : 'featured-properties.html';

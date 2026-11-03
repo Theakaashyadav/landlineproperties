@@ -1,66 +1,26 @@
 # Landline Properties
 
-Production project containing one public frontend, the admin dashboard, a Node.js API and an isolated MongoDB database.
+A static website made from HTML, CSS, browser JavaScript and local images. Project details come from the catalog in `js/delhi-ncr-projects.js`; enquiries open WhatsApp. Hosting needs no database, API, admin application or Node.js runtime.
 
-## Local setup
+## Publish on Hostinger
 
-1. Start MongoDB locally or create a MongoDB Atlas cluster.
-2. In `backend`, copy `.env.example` to `.env`. Set `MONGODB_URI`, keep `MONGODB_DB_NAME=landline_properties`, and set a random `JWT_SECRET` of at least 32 characters, `SITE_URL`, and a strong seed-admin password.
-3. From the repository root, install the dependencies. The root Node package builds and serves both the public website and the admin API:
-   `npm ci`
-4. Start the complete site. On its first successful MongoDB connection, the app
-   automatically creates indexes, default locations and global settings. If valid
-   `SEED_ADMIN_*` values are configured, it also creates the first admin account:
-   `npm run dev`
-5. Open `http://localhost:5000/` and administer it at `http://localhost:5000/admin/login.html`.
+1. Run `npm run build` from the repository root using Node.js 20.19 or newer. No dependencies need installing.
+2. Upload the **contents** of `dist/` into the domain's `public_html` directory on a static/PHP/HTML website. `index.html` must sit directly inside `public_html`, alongside the CSS, JavaScript and `image/` folder.
+3. Open the domain and check a property detail page and an enquiry link.
 
-The idempotent `npm run seed:db` and `npm run seed:admin` commands remain available
-when manual initialisation is preferred.
+Use static/PHP/HTML hosting for this version. There is no Express entry file, server start command, database connection or environment configuration to set up. If replacing a Node.js Web App, switch the website's hosting setup to static/PHP/HTML in Hostinger; uploading files to an existing managed Node.js deployment does not change its routing configuration.
 
-Do not open admin HTML files directly with `file://`. The public site, uploads, API and admin app are intentionally served from the same origin.
+The build copies public files without transforming the page markup, styles or layout. `dist/` is generated and excluded from Git. Source files, optional build tools and tests remain in the repository.
 
-## Checks
+## Optional local tools
 
-- `npm test` validates required project files and JavaScript syntax.
-- `GET /api/health` verifies that both the API process and MongoDB are running.
-- Published public properties are returned by `GET /api/properties`.
+Node.js is only needed for these development commands:
 
-Uploaded images are stored under `backend/uploads/` and are intentionally excluded from Git. Back them up separately in production.
+- `npm run build`: refresh the upload-ready `dist/` folder.
+- `npm test`: check local references, JavaScript syntax, static catalog behavior and the upload artifact.
 
-## Production deployment
+Edit the existing public HTML, CSS, browser scripts and catalog, rebuild, then upload the updated static files.
 
-1. Create a MongoDB Atlas cluster and a dedicated database user with only `readWrite` access to `landline_properties`. Do not reuse another website's database name or database user.
-2. Allow the Hostinger runtime's outbound IP in the Atlas project IP access list.
-3. Deploy the repository root without `node_modules`. Use these Hostinger build settings:
-
-   | Setting | Value |
-   | --- | --- |
-   | Framework | Express |
-   | Root directory | `./` (repository root) |
-   | Node.js | 22 or 24 |
-   | Build command | `npm run build` (select the `build` script) |
-   | Output directory | `dist` |
-   | Entry file | `server.js` |
-   | Start command, if requested | `npm start` |
-
-   Hostinger installs the dependencies during deployment. For a manual deployment,
-   run `npm ci --omit=dev` and `npm run build`. The build creates `dist/` with the
-   public HTML, styles, browser scripts, images and admin pages. Backend source,
-   credentials and uploaded files are excluded from this public output.
-
-   Do not select `backend` as the root directory: that deploys the API alone and
-   omits the website. Hostinger can place server files in `nodejs/` and public
-   output in a sibling `public_html/` directory. The server supports that layout
-   as well as the repository layout used locally. For a custom layout, set
-   `LANDLINE_FRONTEND_DIR` to the absolute directory containing `index.html`.
-4. In Hostinger environment variables, set `NODE_ENV=production`, `PORT=3000`, the public HTTPS `SITE_URL`, `MONGODB_URI`, `MONGODB_DB_NAME=landline_properties`, a unique 32+ character `JWT_SECRET`, upload limits and the exact allowed origins. Never commit the Atlas URI.
-5. Redeploy or restart the app. Its first successful connection automatically creates the dedicated database, collections, indexes, default locations and settings. Valid temporary `SEED_ADMIN_*` values also create the initial admin; remove those values after the first successful login.
-6. Persist and back up `backend/uploads`, or replace local uploads with managed object storage before horizontal scaling.
-7. Verify `/api/health`, `/api/properties`, `/sitemap.xml`, admin login, one complete CRUD cycle and both public forms before directing traffic.
-
-See `database/mongodb/README.md` for the collection map and database-isolation rules.
-
-If the homepage reports `ENOENT` for `index.html`, check the root and output
-settings above, then redeploy the latest `main` commit. Restarting the API alone
-does not restore files omitted by a deployment. A successful homepage does not
-confirm database connectivity; check `/api/health` separately.
+The existing project catalog is preserved. Verified individual sale or rental
+listings can be added to the `properties` array in `js/static-data.js`; that array
+starts empty rather than presenting project information as available units.

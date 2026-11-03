@@ -1,10 +1,8 @@
 (function () {
   'use strict';
-  const localPreview = location.protocol === 'file:' || (['localhost', '127.0.0.1'].includes(location.hostname) && location.port && location.port !== '5000');
-  const origin = String(window.LANDLINE_API_ORIGIN || (localPreview ? 'http://localhost:5000' : location.origin)).replace(/\/$/, '');
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   const fallback = 'image/home-hero-luxury-delhi-ncr.png';
-  const image = (path) => !path ? fallback : /^https?:/i.test(path) ? path : `${origin}${path}`;
+  const image = (path) => !path ? fallback : /^(?:https?:)?\/\//i.test(path) ? path : String(path).replace(/^\/+/, '');
   const parse = (value) => { if (Array.isArray(value)) return value; try { const result = JSON.parse(value || '[]'); return Array.isArray(result) ? result : []; } catch { return []; } };
   const price = (value) => { const amount = Number(value); if (!Number.isFinite(amount) || amount <= 0) return 'Price on request'; return amount >= 1e7 ? `₹${(amount / 1e7).toFixed(2)} Cr` : `₹${(amount / 1e5).toFixed(2)} Lakh`; };
 
@@ -15,9 +13,8 @@
     try {
       let project = window.LandlineProjects?.find?.(slug);
       if (!project) {
-        const response = await fetch(`${origin}/api/projects/${encodeURIComponent(slug)}`);
-        const result = await response.json().catch(() => null);
-        if (!response.ok || !result?.data) throw new Error(result?.message || 'Project not found.');
+        const result = await window.LandlineData.request(`/projects/${encodeURIComponent(slug)}`);
+        if (!result?.data) throw new Error('Project not found.');
         project = result.data;
       }
       const amenities = parse(project.amenities); const firstImage = project.images?.[0]?.image_path || project.featured_image;

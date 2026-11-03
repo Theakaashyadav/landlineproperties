@@ -22,8 +22,6 @@
   const BUDGETS = Object.fromEntries(SEARCH.budgets.filter(budget => budget.value).map(budget => [budget.value, [budget.min, budget.max]]));
   const PAGE_SIZE = 12;
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-  const localPreview = location.protocol === 'file:' || (['localhost', '127.0.0.1'].includes(location.hostname) && location.port && location.port !== '5000');
-  const origin = String(window.LANDLINE_API_ORIGIN || (localPreview ? 'http://localhost:5000' : location.origin)).replace(/\/$/, '');
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('region-search');
@@ -176,7 +174,7 @@
 
     function imageUrl(value) {
       const path = String(value || '').trim();
-      return !path ? regionInfo().fallback : /^https?:\/\//i.test(path) ? path : `${origin}/${path.replace(/^\/+/, '')}`;
+      return !path ? regionInfo().fallback : /^(?:https?:)?\/\//i.test(path) ? path : path.replace(/^\/+/, '');
     }
 
     function card(property) {
@@ -291,9 +289,7 @@
         }
       }
       try {
-        const response = await fetch(`${origin}/api/properties?${apiQuery(nextPage)}`, { signal: controller.signal });
-        const result = await response.json().catch(() => null);
-        if (!response.ok || !result) throw new Error('Current listings could not be loaded.');
+        const result = await window.LandlineData.request(`/properties?${apiQuery(nextPage)}`, { signal: controller.signal });
         if (currentRequest !== requestNumber) return;
         const incoming = Array.isArray(result.data) ? result.data : [];
         properties = append ? [...properties, ...incoming.filter(item => !properties.some(property => String(property.id) === String(item.id)))] : incoming;

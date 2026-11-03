@@ -458,9 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* Keep contact links consistent, including newly rendered property content. */
-document.addEventListener('DOMContentLoaded', async () => {
-  const localPreview = location.protocol === 'file:' || (['localhost', '127.0.0.1'].includes(location.hostname) && location.port && location.port !== '5000');
-  const origin = String(window.LANDLINE_API_ORIGIN || (localPreview ? 'http://localhost:5000' : location.origin)).replace(/\/$/, '');
+document.addEventListener('DOMContentLoaded', () => {
   window.LANDLINE_SITE_SETTINGS = { ...LANDLINE_PUBLIC_CONTACT };
   applyLandlineContactSettings(window.LANDLINE_SITE_SETTINGS);
   const observer = new MutationObserver((mutations) => {
@@ -469,13 +467,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     }));
   });
   observer.observe(document.body, { childList: true, subtree: true });
-  try {
-    const response = await fetch(`${origin}/api/settings/public`);
-    if (!response.ok) return;
-    const { data = {} } = await response.json();
-    window.LANDLINE_SITE_SETTINGS = { ...data, ...LANDLINE_PUBLIC_CONTACT };
-    applyLandlineContactSettings(window.LANDLINE_SITE_SETTINGS);
-  } catch {
-    // Static fallback details remain usable when the API is unavailable.
-  }
 });

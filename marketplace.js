@@ -3,9 +3,6 @@
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => [...c.querySelectorAll(s)];
   const page = document.body.dataset.marketPage;
-  const localPreview = location.protocol === 'file:' || (['localhost', '127.0.0.1'].includes(location.hostname) && location.port && location.port !== '5000');
-  const origin = String(window.LANDLINE_API_ORIGIN || (localPreview ? 'http://localhost:5000' : location.origin)).replace(/\/$/, '');
-  const api = `${origin}/api`;
   const fallbackImage = 'image/home-hero-luxury-evening-v2.png';
   const PAGE_SIZE = 12;
   let properties = [];
@@ -13,7 +10,7 @@
   let controller;
 
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-  const imageUrl = (value) => !value ? fallbackImage : /^https?:/i.test(value) ? value : `${origin}${value}`;
+  const imageUrl = (value) => !value ? fallbackImage : /^(?:https?:)?\/\//i.test(value) ? value : String(value).replace(/^\/+/, '');
   const formatPrice = (property) => {
     if (property.price_label) return escapeHtml(property.price_label);
     if (property.price === null || property.price === undefined || property.price === '') return 'Price on request';
@@ -112,9 +109,7 @@
     const { query, fields } = apiQuery();
     query.set('page', String(nextPage));
     try {
-      const response = await fetch(`${api}/properties?${query}`, { signal: controller.signal });
-      const result = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(result?.message || 'Unable to load properties.');
+      const result = await window.LandlineData.request(`/properties?${query}`, { signal: controller.signal });
       const incoming = Array.isArray(result.data) ? result.data : [];
       properties = append
         ? [...properties, ...incoming.filter((item) => !properties.some((property) => String(property.id) === String(item.id)))]
@@ -163,36 +158,9 @@
     modal.showModal();
   }
 
-  async function submitLead(form) {
-    const button = form.querySelector('button[type="submit"], button:not([type])');
-    if (button?.disabled) return;
-    const oldLabel = button?.textContent;
-    if (button) { button.disabled = true; button.textContent = 'Submitting…'; }
-    const values = Object.fromEntries(new FormData(form));
-    const payload = {
-      name: values.name,
-      phone: values.phone || values.mobile,
-      email: values.email,
-      property_id: values.property || undefined,
-      requirement: values.requirement,
-      location: values.location || values.preferredLocation,
-      budget: values.budget,
-      message: values.message,
-      source: `${page || 'property'}-page`
-    };
-    try {
-      const response = await fetch(`${api}/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const result = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(result?.message || 'Unable to submit your enquiry.');
-      $('.form-status', form).textContent = result.message || 'Thank you. Your enquiry has been submitted.';
-      form.reset();
-    } catch (error) {
-      const status = $('.form-status', form);
-      status.textContent = error.message;
-      status.style.color = '#b42318';
-    } finally {
-      if (button) { button.disabled = false; button.textContent = oldLabel; }
-    }
+  function submitLead(form) {
+    if (!form.reportValidity()) return;
+    window.LandlineContact.openWhatsApp(window.LandlineContact.buildMessage(form));
   }
 
   document.addEventListener('click', (event) => {
