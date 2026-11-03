@@ -4,8 +4,9 @@ const { spawnSync } = require('child_process');
 const vm = require('vm');
 
 const projectRoot = path.resolve(__dirname, '..', '..');
-const ignored = new Set(['node_modules', '.git', '.runtime', '.deploy']);
+const ignored = new Set(['node_modules', '.git', '.runtime', '.deploy', 'dist']);
 const required = [
+  'package.json', 'package-lock.json', 'server.js',
   'index.html', 'featured-properties.html', 'rent.html', 'property-details.html',
   'contact.html', 'list-property.html', 'admin/login.html', 'admin/dashboard.html',
   'database/mongodb/README.md', 'backend/models/index.js', 'backend/.env.example'

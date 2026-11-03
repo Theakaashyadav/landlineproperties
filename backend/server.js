@@ -11,6 +11,7 @@ const database = require('./config/db');
 const { Property, Project } = require('./models');
 const { errorHandler } = require('./middleware/errorHandler');
 const { isHostingerRuntime, isProductionRuntime } = require('./utils/runtime');
+const { resolveFrontendDir } = require('./utils/frontendDirectory');
 const databaseInitializer = require('./services/initializeDatabase');
 
 const authRoutes = require('./routes/authRoutes');
@@ -24,7 +25,7 @@ const projectRoutes = require('./routes/projectRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
-const frontendDir = path.resolve(__dirname, '..');
+const frontendDir = resolveFrontendDir(__dirname);
 const hostingerRuntime = isHostingerRuntime();
 const isProduction = isProductionRuntime();
 const productionAssetMaxAge = isProduction ? '7d' : 0;
@@ -185,7 +186,7 @@ app.get('/', (req, res, next) => {
 });
 app.get('/:file', (req, res, next) => {
   const file = req.params.file;
-  if (path.basename(file) !== file || !publicRootExtensions.has(path.extname(file).toLowerCase())) return next();
+  if (path.basename(file) !== file || file.toLowerCase() === 'server.js' || !publicRootExtensions.has(path.extname(file).toLowerCase())) return next();
   res.sendFile(path.join(frontendDir, file), publicStaticOptions, (error) => {
     if (!error) return;
     if (error.statusCode === 404) return next();
