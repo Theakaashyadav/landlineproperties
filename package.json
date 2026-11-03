@@ -8,6 +8,7 @@
   },
   "main": "server.js",
   "scripts": {
+    "build": "node backend/scripts/build-frontend.js",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed:db": "node backend/scripts/seedDatabase.js",
