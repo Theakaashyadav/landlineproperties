@@ -26,7 +26,7 @@ button,.btn,a.btn{touch-action:manipulation}
  .navbar{gap:8px}
  .nav-links.is-open{position:fixed!important;top:76px!important;left:0!important;right:0!important;width:100%!important;max-height:calc(100dvh - 76px);overflow-y:auto;overscroll-behavior:contain;padding:10px max(5%,env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) max(5%,env(safe-area-inset-left))!important}
  .nav-links.is-open a{min-height:44px;display:flex!important;align-items:center}
- .mobile-nav-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px;padding-top:12px;border-top:1px solid #eee}
+ .mobile-nav-actions{display:grid!important;grid-template-columns:1fr;gap:9px;margin-top:8px;padding-top:12px;border-top:1px solid #eee}
  .mobile-nav-actions a{justify-content:center;border:1px solid #18202a;border-radius:7px;padding:8px!important;text-align:center}
  .mobile-nav-actions a:last-child{background:#18202a;color:#fff}
  .hover-select-options,.budget-custom-panel{max-height:min(45dvh,320px);overflow-y:auto;overscroll-behavior:contain}
@@ -95,9 +95,11 @@ button,.btn,a.btn{touch-action:manipulation}
 /* Switch to the compact menu before the full navigation can collide with the logo/actions. */
 @media(max-width:1100px){
  .navbar{position:relative;gap:8px}
+ header .nav-buttons{display:none!important}
  .nav-links{display:none!important}
  .mobile-nav-toggle{display:block;margin-left:auto;margin-right:10px}
  .nav-links.is-open{display:flex!important;position:fixed!important;z-index:20;top:76px!important;left:0!important;right:0!important;width:100%!important;max-height:calc(100dvh - 76px);overflow-y:auto;flex-direction:column;gap:0;padding:10px max(5%,env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) max(5%,env(safe-area-inset-left))!important;background:#fff;border-bottom:1px solid #eee;box-shadow:0 12px 22px rgba(0,0,0,.08)}
  .nav-links.is-open a{display:flex!important;align-items:center;min-height:44px;padding:11px 0}
- .mobile-nav-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px;padding-top:12px;border-top:1px solid #eee}
+ .mobile-nav-actions{display:grid!important;grid-template-columns:1fr;gap:9px;margin-top:8px;padding-top:12px;border-top:1px solid #eee}
+ .mobile-nav-actions a{justify-content:center;border:1px solid #18202a;border-radius:7px;padding:8px!important;text-align:center;background:#18202a;color:#fff}
 }

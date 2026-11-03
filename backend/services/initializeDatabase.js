@@ -12,9 +12,9 @@ const DEFAULT_LOCATIONS = [
 const DEFAULT_SETTINGS = {
   id: 1,
   company_name: 'Landline Properties',
-  phone: '+919876543210',
-  email: 'hello@landline.com',
-  whatsapp: '919876543210',
+  phone: '+919012622994',
+  email: 'info@landlineproperties.com',
+  whatsapp: '919012622994',
   seo_default_title: 'Landline Properties | Real Estate in Gurgaon, Noida, Greater Noida & Delhi NCR',
   seo_default_description: 'Find verified properties, new projects and trusted brokers across Delhi NCR with Landline Properties.'
 };

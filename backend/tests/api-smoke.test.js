@@ -26,8 +26,10 @@ function queryResult(value) {
 }
 
 let propertyQueryCount = 0;
-Property.find = () => {
+let lastPropertyFilter;
+Property.find = (filter) => {
   propertyQueryCount += 1;
+  lastPropertyFilter = filter;
   return queryResult([{
     id: 1, title: 'Test Property', slug: 'test-property', property_type: 'Apartment',
     purpose: 'Buy', price: 15000000, city: 'Gurgaon', locality: 'Sector 65',
@@ -74,6 +76,79 @@ test('invalid public purpose is rejected without querying the database', async (
   assert.equal(response.status, 400);
   const result = await response.json();
   assert.equal(result.success, false);
+  assert.equal(propertyQueryCount, before);
+});
+
+// Evaluate the query sent to MongoDB against representative records. This keeps
+// coverage focused on region membership and filter combinations, not query shape.
+function matchesFilter(record, filter) {
+  return Object.entries(filter).every(([key, condition]) => {
+    if (key === '$and') return condition.every(clause => matchesFilter(record, clause));
+    if (key === '$or') return condition.some(clause => matchesFilter(record, clause));
+    if (condition && typeof condition === 'object' && '$regex' in condition) {
+      return new RegExp(condition.$regex, condition.$options).test(record[key] || '');
+    }
+    return record[key] === condition;
+  });
+}
+
+test('Delhi NCR region includes its city names and excludes Uttarakhand', async () => {
+  const response = await fetch(`${baseUrl}/api/properties?region=delhi-ncr&purpose=Buy`);
+  assert.equal(response.status, 200);
+  const record = { status: 'published', purpose: 'Buy' };
+  for (const city of ['New Delhi', 'Delhi NCR', 'Gurgaon', 'gurugram', 'Noida', 'Greater Noida West', 'Faridabad', 'Ghaziabad']) {
+    assert.equal(matchesFilter({ ...record, city }, lastPropertyFilter), true, city);
+  }
+  for (const city of ['Dehradun', 'Nainital', 'Uttarakhand', 'Mumbai']) {
+    assert.equal(matchesFilter({ ...record, city }, lastPropertyFilter), false, city);
+  }
+});
+
+test('Uttarakhand region includes hill towns and excludes Delhi NCR', async () => {
+  const response = await fetch(`${baseUrl}/api/properties?region=uttarakhand`);
+  assert.equal(response.status, 200);
+  const record = { status: 'published' };
+  for (const city of ['Uttarakhand', 'Dehradun, Uttarakhand', 'MUSSOORIE', 'Nainital', 'Rishikesh', 'Haridwar', 'Haldwani', 'Bhimtal', 'Mukteshwar', 'Naukuchiatal', 'Ramnagar', 'Almora']) {
+    assert.equal(matchesFilter({ ...record, city }, lastPropertyFilter), true, city);
+  }
+  for (const city of ['Gurgaon', 'New Delhi', 'Noida', 'Mumbai']) {
+    assert.equal(matchesFilter({ ...record, city }, lastPropertyFilter), false, city);
+  }
+});
+
+test('Gurgaon location filters include both city spellings within the selected region', async () => {
+  const record = { status: 'published', purpose: 'Buy' };
+  for (const location of ['Gurgaon', 'gUrUgRaM']) {
+    const response = await fetch(`${baseUrl}/api/properties?region=delhi-ncr&location=${location}&purpose=Buy`);
+    assert.equal(response.status, 200);
+    for (const city of ['Gurgaon', 'Gurugram', 'Gurugram, Haryana']) {
+      assert.equal(matchesFilter({ ...record, city }, lastPropertyFilter), true, `${location}: ${city}`);
+    }
+    for (const city of ['Noida', 'Delhi', 'Dehradun', 'Gurgaonshire']) {
+      assert.equal(matchesFilter({ ...record, city }, lastPropertyFilter), false, `${location}: ${city}`);
+    }
+    assert.equal(matchesFilter({ ...record, city: 'Gurugram', status: 'draft' }, lastPropertyFilter), false);
+  }
+});
+
+test('region, location, search and property filters all narrow the same results', async () => {
+  const response = await fetch(`${baseUrl}/api/properties?region=delhi-ncr&location=Sector%2065&q=garden&type=Apartment&purpose=Buy`);
+  assert.equal(response.status, 200);
+  const record = { status: 'published', purpose: 'Buy', property_type: 'Apartment', city: 'Gurgaon', locality: 'Sector 65', title: 'Garden apartment' };
+  assert.equal(matchesFilter(record, lastPropertyFilter), true);
+  for (const different of [
+    { city: 'Dehradun' }, { locality: 'Sector 50' }, { title: 'City apartment' },
+    { property_type: 'Villa' }, { purpose: 'Rent' }, { status: 'draft' }
+  ]) {
+    assert.equal(matchesFilter({ ...record, ...different }, lastPropertyFilter), false, JSON.stringify(different));
+  }
+});
+
+test('unknown region is rejected before querying properties', async () => {
+  const before = propertyQueryCount;
+  const response = await fetch(`${baseUrl}/api/properties?region=unknown-region`);
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).success, false);
   assert.equal(propertyQueryCount, before);
 });
 

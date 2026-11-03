@@ -8,11 +8,23 @@
   const fallback = 'image/home-hero-luxury-delhi-ncr.png';
   const PAGE_SIZE = 12;
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-  const image = (path) => !path ? fallback : /^https?:/i.test(path) ? path : `${origin}${path}`;
+  const image = (path) => !path ? fallback : /^https?:/i.test(path) ? path : `${origin}/${String(path).replace(/^\/+/, '')}`;
   let projects = [];
+  let liveProjects = [];
+  let catalogProjects = [];
   let selected = [];
   let pagination = { page: 1, total: 0, totalPages: 1 };
   let controller;
+  let requestNumber = 0;
+
+  const projectKey = (project) => String(project.id || project.slug || '');
+  const projectLocation = (project) => [project.locality, project.city].filter(Boolean).join(', ');
+  const catalogProject = (key) => window.LandlineProjects?.projects?.find((project) => project.slug === String(key) || String(project.id) === String(key));
+
+  function mergeProjects() {
+    const catalogSlugs = new Set(catalogProjects.map((project) => project.slug));
+    projects = [...catalogProjects, ...liveProjects.filter((project) => !catalogSlugs.has(project.slug))];
+  }
 
   const price = (value) => {
     const number = Number(value);
@@ -25,7 +37,8 @@
   };
   function card(project) {
     const amenities = parseJson(project.amenities).slice(0, 4);
-    return `<article class="project-card"><div class="property-media"><img src="${esc(image(project.cover_image))}" alt="${esc(`${project.name} project in ${project.city}`)}" loading="lazy" width="1000" height="625" onerror="this.onerror=null;this.src='${fallback}'">${project.project_status ? `<span class="badge">${esc(project.project_status)}</span>` : ''}</div><div class="property-body"><h3>${esc(project.name)}</h3><p class="location">${esc(project.city)}</p><div class="specs"><span>${esc(project.configuration || 'Configuration on request')}</span>${project.developer ? `<span>${esc(project.developer)}</span>` : ''}</div>${amenities.length ? `<div class="amenities">${amenities.map((item) => `<span>${esc(item)}</span>`).join('')}</div>` : ''}<p class="highlight">${esc(project.description || 'Contact us for current project details, approvals and availability.')}</p><p class="price">${price(project.starting_price)}</p><label class="compare-check"><input type="checkbox" data-compare="${project.id}" ${selected.includes(String(project.id)) ? 'checked' : ''}> Add to comparison</label><div class="card-actions"><a class="btn" href="project-details.html?slug=${encodeURIComponent(project.slug)}">View Project</a><button class="btn btn-dark" type="button" data-project-enquire="${project.id}" data-project-name="${esc(project.name)}" data-project-location="${esc(project.city)}" data-project-type="${esc(project.configuration || '')}">Request Details</button></div></div></article>`;
+    const key = projectKey(project);
+    return `<article class="project-card"><div class="property-media"><img src="${esc(image(project.cover_image || project.image))}" alt="${esc(project.image_alt || `${project.name} project in ${project.city}`)}" loading="lazy" width="1000" height="625" onerror="this.onerror=null;this.src='${fallback}'">${project.project_status ? `<span class="badge">${esc(project.project_status)}</span>` : ''}</div><div class="property-body"><h3>${esc(project.name)}</h3><p class="location">${esc(projectLocation(project))}</p><div class="specs"><span>${esc(project.configuration || 'Configuration on request')}</span>${project.developer ? `<span>${esc(project.developer)}</span>` : ''}</div>${amenities.length ? `<div class="amenities">${amenities.map((item) => `<span>${esc(item)}</span>`).join('')}</div>` : ''}<p class="highlight">${esc(project.short_description || project.description || 'Contact us for current project details, approvals and availability.')}${project.image_note ? `<br><small>${esc(project.image_note)}</small>` : ''}</p><p class="price">${project.price_label ? esc(project.price_label) : price(project.starting_price)}</p><label class="compare-check"><input type="checkbox" data-compare="${esc(key)}" ${selected.includes(key) ? 'checked' : ''}> Add to comparison</label><div class="card-actions"><a class="btn" href="project-details.html?slug=${encodeURIComponent(project.slug)}">View Project</a><button class="btn btn-dark" type="button" data-project-enquire="${esc(key)}" data-project-name="${esc(project.name)}" data-project-location="${esc(projectLocation(project))}" data-project-type="${esc(project.configuration || '')}">Request Details</button></div></div></article>`;
   }
 
   function paginationControl() {
@@ -47,7 +60,7 @@
   function updatePagination() {
     const wrap = paginationControl();
     if (!wrap) return;
-    wrap.hidden = !(pagination.page < pagination.totalPages && projects.length < pagination.total);
+    wrap.hidden = !(pagination.page < pagination.totalPages && liveProjects.length < pagination.total);
     const button = $('[data-load-more-projects]', wrap);
     const status = $('[role="status"]', wrap);
     if (button) { button.disabled = false; button.textContent = 'Load More Projects'; }
@@ -57,10 +70,12 @@
   function render() {
     const grid = $('#project-grid');
     if (!grid) return;
-    grid.innerHTML = projects.length ? projects.map(card).join('') : '<div class="empty" role="status"><strong>No published projects match your requirements.</strong></div>';
-    if ($('#project-count')) $('#project-count').textContent = pagination.total > projects.length
-      ? `Showing ${projects.length} of ${pagination.total} projects`
-      : `${pagination.total} ${pagination.total === 1 ? 'project' : 'projects'}`;
+    grid.innerHTML = projects.length ? projects.map(card).join('') : '<div class="empty" role="status"><strong>No projects match your requirements.</strong></div>';
+    const duplicateCount = liveProjects.filter((project) => catalogProjects.some((item) => item.slug === project.slug)).length;
+    const total = Math.max(projects.length, pagination.total + catalogProjects.length - duplicateCount);
+    if ($('#project-count')) $('#project-count').textContent = total > projects.length
+      ? `Showing ${projects.length} of ${total} projects`
+      : `${total} ${total === 1 ? 'project' : 'projects'}`;
     updatePagination();
   }
   function query() {
@@ -78,62 +93,78 @@
     if (!grid) return;
     controller?.abort();
     controller = new AbortController();
+    const currentController = controller;
+    const currentRequest = ++requestNumber;
     const nextPage = append ? pagination.page + 1 : 1;
+    const { values, params } = query();
+    if (!append) {
+      liveProjects = [];
+      pagination = { page: 1, total: 0, totalPages: 1 };
+      catalogProjects = window.LandlineProjects?.select?.(values) || [];
+      mergeProjects();
+      render();
+    }
     const loadMore = $('[data-load-more-projects]');
     if (append && loadMore) { loadMore.disabled = true; loadMore.textContent = 'Loading…'; }
-    else grid.innerHTML = '<div class="empty" role="status"><strong>Loading current projects…</strong></div>';
-    const { values, params } = query();
     params.set('page', String(nextPage));
+    const visible = new URLSearchParams(); Object.entries(values).forEach(([key, value]) => { if (value) visible.set(key, value); });
+    history.replaceState(null, '', `${location.pathname}${visible.size ? `?${visible}` : ''}${location.hash}`);
+    if (scroll) $('#projects')?.scrollIntoView({ behavior: 'smooth' });
     try {
-      const response = await fetch(`${api}/projects?${params}`, { signal: controller.signal });
+      const response = await fetch(`${api}/projects?${params}`, { signal: currentController.signal });
       const result = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(result?.message || 'Unable to load projects.');
+      if (currentRequest !== requestNumber) return;
+      if (!response.ok || !result) throw new Error(result?.message || 'Unable to load projects.');
       const incoming = Array.isArray(result.data) ? result.data : [];
-      projects = append
-        ? [...projects, ...incoming.filter((item) => !projects.some((project) => String(project.id) === String(item.id)))]
+      liveProjects = append
+        ? [...liveProjects, ...incoming.filter((item) => !liveProjects.some((project) => projectKey(project) === projectKey(item) || (item.slug && project.slug === item.slug)))]
         : incoming;
       pagination = {
         page: Number(result.pagination?.page) || nextPage,
-        total: Number(result.pagination?.total) || projects.length,
+        total: Number(result.pagination?.total) || liveProjects.length,
         totalPages: Number(result.pagination?.totalPages) || 1
       };
+      mergeProjects();
       render();
-      const visible = new URLSearchParams(); Object.entries(values).forEach(([key, value]) => { if (value) visible.set(key, value); });
-      history.replaceState(null, '', `${location.pathname}${visible.size ? `?${visible}` : ''}${location.hash}`);
-      if (scroll) $('#projects')?.scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
-      if (error.name === 'AbortError') return;
-      if (append && projects.length) {
+      if (error.name === 'AbortError' || currentRequest !== requestNumber) return;
+      if (append && liveProjects.length) {
         const wrap = paginationControl();
         const button = $('[data-load-more-projects]', wrap);
         const status = $('[role="status"]', wrap);
         if (button) { button.disabled = false; button.textContent = 'Try Loading More Again'; }
         if (status) status.textContent = error.message || 'Unable to load more projects.';
       } else {
-        projects = [];
+        liveProjects = [];
         pagination = { page: 1, total: 0, totalPages: 1 };
-        grid.innerHTML = `<div class="empty" role="status"><strong>${esc(error.message)}</strong><br><button class="btn btn-dark" data-project-retry>Try Again</button></div>`;
-        updatePagination();
+        mergeProjects();
+        render();
       }
     }
   }
   function open(id = '', context) {
     const modal = $('#enquiry-modal');
     if (!modal) return;
-    const project = projects.find((item) => String(item.id) === String(id));
+    const key = context?.dataset.projectSlug || id;
+    const project = projects.find((item) => projectKey(item) === String(key) || item.slug === String(key)) || catalogProject(key);
     const projectField = modal.querySelector('[name="project"]');
     const nameField = modal.querySelector('[name="project_name"]');
     const locationField = modal.querySelector('[name="location"]');
     const typeField = modal.querySelector('[name="type"]');
-    if (projectField) projectField.value = id;
+    const form = modal.querySelector('form');
+    if (projectField) projectField.value = project ? projectKey(project) : key;
+    if (form) {
+      form.dataset.projectName = context?.dataset.projectName || project?.name || '';
+      form.dataset.projectSlug = catalogProject(key)?.slug || '';
+    }
     if (nameField) nameField.value = context?.dataset.projectName || project?.name || '';
-    if (locationField && !locationField.value) locationField.value = context?.dataset.projectLocation || project?.city || '';
-    if (typeField && !typeField.value) typeField.value = context?.dataset.projectType || project?.configuration || '';
+    if (locationField && (project || context?.dataset.projectLocation || !locationField.value)) locationField.value = context?.dataset.projectLocation || (project ? projectLocation(project) : '');
+    if (typeField && (project || context?.dataset.projectType || !typeField.value)) typeField.value = context?.dataset.projectType || project?.configuration || '';
     modal.showModal();
   }
   function updateDock() { const dock = $('#compare-dock'); if (!dock) return; dock.classList.toggle('visible', selected.length > 0); $('p', dock).textContent = `${selected.length} of 3 projects selected`; }
   function compare() {
-    const list = projects.filter((item) => selected.includes(String(item.id)));
+    const list = projects.filter((item) => selected.includes(projectKey(item)));
     const wrap = $('#comparison-panel');
     wrap.innerHTML = list.length < 2 ? '<p>Select at least two projects to compare.</p>' : `<table class="comparison"><thead><tr><th>Project</th>${list.map((item) => `<th>${esc(item.name)}</th>`).join('')}</tr></thead><tbody>${['city', 'configuration', 'project_status', 'starting_price'].map((key) => `<tr><th>${key.replace('_', ' ')}</th>${list.map((item) => `<td>${key === 'starting_price' ? price(item[key]) : esc(item[key] || 'On request')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     wrap.scrollIntoView({ behavior: 'smooth' });
@@ -142,12 +173,16 @@
     const button = form.querySelector('button'); const label = button.textContent; button.disabled = true; button.textContent = 'Submitting…';
     const values = Object.fromEntries(new FormData(form));
     try {
+      const catalog = catalogProject(values.project || form.dataset.projectSlug);
+      const projectId = !catalog && /^[1-9]\d*$/.test(String(values.project || '')) ? values.project : undefined;
+      const projectName = values.project_name || form.dataset.projectName || catalog?.name;
       const contextLines = [
-        values.project ? `Project ID: ${values.project}` : '',
-        values.project_name ? `Project: ${values.project_name}` : '',
+        projectId ? `Project ID: ${projectId}` : '',
+        catalog?.slug ? `Project reference: ${catalog.slug}` : '',
+        projectName ? `Project: ${projectName}` : '',
         values.type ? `Preferred configuration: ${values.type}` : ''
       ];
-      const response = await fetch(`${api}/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: values.name, phone: values.phone || values.mobile, email: values.email, project_id: values.project || undefined, inquiry_type: values.type || undefined, location: values.location, budget: values.budget, requirement: 'Project enquiry', message: [values.message, ...contextLines].filter(Boolean).join('\n'), source: 'new-projects-page' }) });
+      const response = await fetch(`${api}/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: values.name, phone: values.phone || values.mobile, email: values.email, project_id: projectId, inquiry_type: values.type || undefined, location: values.location, budget: values.budget, requirement: 'Project enquiry', message: [values.message, ...contextLines].filter(Boolean).join('\n'), source: location.pathname.includes('project-details') ? 'project-details-page' : 'new-projects-page' }) });
       const result = await response.json().catch(() => null); if (!response.ok) throw new Error(result?.message || 'Unable to submit request.');
       $('.form-status', form).textContent = result.message || 'Thank you. Your request has been submitted.'; form.reset();
     } catch (error) { const status = $('.form-status', form); status.textContent = error.message; status.style.color = '#b42318'; }
@@ -156,7 +191,7 @@
   document.addEventListener('click', (event) => {
     const quick = event.target.closest('[data-project-filter]');
     if (quick) { $$('[data-project-filter]').forEach((item) => item.classList.remove('active')); quick.classList.add('active'); const field = $('#project-search')?.elements[quick.dataset.field || 'status']; if (field) field.value = quick.dataset.projectFilter; load(true); }
-    const enquiry = event.target.closest('[data-project-enquire]'); if (enquiry) open(enquiry.dataset.projectEnquire, enquiry);
+    const enquiry = event.target.closest('[data-project-enquire], [data-project-slug]'); if (enquiry) open(enquiry.dataset.projectSlug || enquiry.dataset.projectEnquire, enquiry);
     if (event.target.closest('[data-project-modal-close]')) $('#enquiry-modal')?.close();
     if (event.target.closest('#compare-now')) compare();
     if (event.target.closest('[data-clear-projects]')) { $('#project-search')?.reset(); setTimeout(() => load(), 0); }
@@ -171,5 +206,5 @@
     form.addEventListener('submit', (event) => { event.preventDefault(); load(true); });
     load();
   });
-  window.LandlineProjects = { load, open };
+  window.LandlineProjects = Object.assign(window.LandlineProjects || {}, { load, open });
 })();

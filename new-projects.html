@@ -16,33 +16,30 @@
     <link rel="stylesheet" href="marketplace.css">
     <link rel="stylesheet" href="discovery.css">
     <script src="site.js" defer></script>
+    <script src="js/delhi-ncr-projects.js" defer></script>
     <script src="discovery.js" defer></script>
+    <link rel="stylesheet" href="brand-theme.css">
+    <script src="brand-theme.js" defer></script>
 </head>
 
-<body>
+<body class="brand-site">
     <header class="market-header">
         <div class="container navbar"><a class="header-logo" href="index.html"><img src="image/Landline.png"
                     alt="Landline Properties"></a>
             <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="featured-properties.html">Buy</a></li>
-                <li><a href="rent.html">Rent</a></li>
-                <li><a href="investment.html">Investment</a></li>
-                <li><a class="active" aria-current="page" href="new-projects.html">New Projects</a></li>
-                <li><a href="gallery-profile.html">Gallery</a></li>
-                <li><a href="locations.html">Locations</a></li>
-                <li><a href="about.html">About Us</a></li>
+                <li><a href="index.html">Home</a></li><li><a href="featured-properties.html?region=delhi-ncr">Delhi NCR</a></li><li><a href="featured-properties.html?region=uttarakhand">Uttarakhand</a></li>
             </ul>
-            <div class="nav-buttons"><a class="btn" href="contact.html">Contact</a><a class="btn btn-dark"
-                    href="list-property.html">List Property</a></div>
+            <div class="nav-buttons"><a href="contact.html" class="btn btn-dark">Enquire Now</a></div>
         </div>
     </header>
     <main>
         <section class="hero project-hero">
-            <div class="container hero-copy"><span class="eyebrow">Project discovery</span>
-                <h1>New Residential Projects in Delhi NCR</h1>
+            <div class="container hero-copy brand-visual-intro">
+                <div class="brand-hero-copy"><span class="eyebrow">Project discovery</span>
+                <h1>New spaces.<br>Your next beginning.</h1>
                 <p>Explore new launches, upcoming developments and premium residential projects across Gurgaon, Noida,
-                    Greater Noida and Delhi NCR.</p>
+                    Greater Noida and Delhi NCR.</p></div>
+                <figure class="brand-hero-visual"><img src="image/home-hero-luxury-delhi-ncr.png" alt="Representative architectural visual of a residential development" width="1000" height="900"><figcaption><small>Project discovery</small><span>Explore what is taking shape.</span></figcaption></figure>
             </div>
         </section>
         <div class="container search-panel">
@@ -123,23 +120,23 @@
                             <p>Apartments and luxury residences across key corridors.</p><strong>Explore →</strong>
                         </div>
                     </button><button class="location-card" data-project-filter="Noida" data-field="location"><img
-                            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=700&q=80"
-                            alt="New projects in Noida" loading="lazy">
+                            src="image/home-hero-luxury-delhi-ncr.png"
+                            alt="Representative imagery for property discovery" loading="lazy">
                         <div>
                             <h3>Noida</h3>
                             <p>Residential communities near expressway sectors.</p><strong>Explore →</strong>
                         </div>
                     </button><button class="location-card" data-project-filter="Greater Noida"
                         data-field="location"><img
-                            src="https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?auto=format&fit=crop&w=700&q=80"
-                            alt="New projects in Greater Noida" loading="lazy">
+                            src="image/home/garden-villa.jpg"
+                            alt="Representative imagery for property discovery" loading="lazy">
                         <div>
                             <h3>Greater Noida</h3>
                             <p>Family housing in planned developing sectors.</p><strong>Explore →</strong>
                         </div>
                     </button><button class="location-card" data-project-filter="Delhi NCR" data-field="location"><img
-                            src="https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=700&q=80"
-                            alt="New projects in Delhi NCR" loading="lazy">
+                            src="image/home/bright-interior.jpg"
+                            alt="Representative imagery for property discovery" loading="lazy">
                         <div>
                             <h3>Delhi NCR</h3>
                             <p>Urban residences across established districts.</p><strong>Explore →</strong>
@@ -257,7 +254,7 @@
                         <p>Share your preferred location, budget and configuration to explore suitable projects.</p>
                     </div>
                     <div class="hero-actions"><button class="btn btn-gold" data-project-enquire>Request Project
-                            Details</button><a class="btn" href="tel:+919876543210">Talk to an Expert</a></div>
+                            Details</button><a class="btn" href="tel:+919012622994">Talk to an Expert</a></div>
                 </div>
             </div>
         </section>
@@ -280,7 +277,7 @@
             </form>
         </div>
     </dialog>
-    <div class="mobile-contact"><a class="btn" href="tel:+919876543210">Call</a><button class="btn btn-dark"
+    <div class="mobile-contact"><a class="btn" href="tel:+919012622994">Call</a><button class="btn btn-dark"
             data-project-enquire>Request Details</button></div>
 </body>
 

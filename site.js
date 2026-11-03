@@ -1,5 +1,80 @@
+const LANDLINE_PUBLIC_CONTACT = Object.freeze({
+  phone: '+919012622994',
+  phone_display: '+91 90126 22994',
+  whatsapp: '919012622994',
+  email: 'info@landlineproperties.com'
+});
+
+(function () {
+  'use strict';
+  const enquiryForms = '[data-landline-lead-form], [data-landline-listing-form], #enquiry-form, #project-enquiry-form';
+  const fieldLabels = {
+    name: 'Name', phone: 'Mobile', mobile: 'Mobile', email: 'Email',
+    location: 'Preferred location', preferredLocation: 'Preferred location',
+    city: 'City', requirement: 'Requirement', budget: 'Budget',
+    type: 'Configuration', property_type: 'Property type', bhk: 'Bedrooms',
+    area: 'Area', furnishing: 'Furnishing', description: 'Property details', message: 'Message'
+  };
+
+  function whatsappUrl(message = 'Hello Landline Properties, I would like help with a property enquiry.') {
+    return `https://wa.me/${LANDLINE_PUBLIC_CONTACT.whatsapp}?text=${encodeURIComponent(message)}`;
+  }
+
+  function buildMessage(form) {
+    const values = new FormData(form);
+    const params = new URLSearchParams(window.location.search);
+    const page = window.location.pathname.split('/').pop();
+    const projectReference = String(values.get('project') || form.dataset.projectSlug || params.get('project') ||
+      (page === 'project-details.html' ? params.get('slug') : '') || '').trim();
+    const catalogProject = window.LandlineProjects?.find?.(projectReference);
+    const projectName = String(values.get('project_name') || form.dataset.projectName || catalogProject?.name || '').trim();
+    const propertyReference = String(values.get('property') || params.get('property') || '').trim();
+    const propertySlug = form.elements.namedItem('property')?.dataset.slug ||
+      (page === 'property-details.html' ? params.get('slug') : '');
+    const propertyName = page === 'property-details.html' ? document.querySelector('#detail-main h1')?.textContent.trim() : '';
+    const lines = ['Hello Landline Properties,', form.matches('[data-landline-listing-form]')
+      ? 'I would like to list my property.' : 'I have a property enquiry.'];
+    if (projectName) lines.push(`Project: ${projectName}`);
+    if (projectReference) lines.push(`Project reference: ${projectReference}`);
+    if (propertyName) lines.push(`Property: ${propertyName}`);
+    if (propertyReference) lines.push(`Property reference: ${propertyReference}`);
+    if (propertySlug) lines.push(`Property listing: ${propertySlug}`);
+    const included = new Set();
+    for (const [key, raw] of values) {
+      const label = fieldLabels[key];
+      if (!label || typeof raw !== 'string' || included.has(label)) continue;
+      const value = raw.trim();
+      const field = form.elements.namedItem(key);
+      if (!value || (field instanceof HTMLSelectElement && /^(?:select|choose)\b/i.test(value))) continue;
+      lines.push(`${label}: ${value}`);
+      included.add(label);
+    }
+    lines.push(`Page: ${document.title}`, `Link: ${window.location.href}`);
+    return lines.join('\n');
+  }
+
+  window.LandlineContact = {
+    ...LANDLINE_PUBLIC_CONTACT,
+    whatsappUrl,
+    buildMessage,
+    openWhatsApp(message) { window.location.assign(whatsappUrl(message)); }
+  };
+
+  // Capture enquiry submissions before page-specific API handlers. Search and
+  // admin forms keep their existing behavior; only enquiry fields are shared.
+  document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (/\/admin(?:\/|$)/i.test(window.location.pathname) ||
+        !(form instanceof HTMLFormElement) || !form.matches(enquiryForms)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (form.reportValidity()) window.LandlineContact.openWhatsApp(buildMessage(form));
+  }, true);
+})();
+
 function applyLandlineContactSettings(data, root = document) {
   if (!data || !root) return;
+  data = { ...data, ...LANDLINE_PUBLIC_CONTACT };
   const phone = String(data.phone || '').replace(/[^+\d]/g, '');
   const whatsapp = String(data.whatsapp || data.phone || '').replace(/\D/g, '');
   const selectAll = (selector) => {
@@ -17,9 +92,9 @@ function applyLandlineContactSettings(data, root = document) {
     });
     selectAll('[data-site-phone]:not(a)').forEach((element) => { element.textContent = displayPhone; });
   }
-  if (whatsapp) selectAll('a[href*="wa.me/"]').forEach((link) => {
-    const query = new URL(link.href, window.location.href).search;
-    link.href = `https://wa.me/${whatsapp}${query}`;
+  if (whatsapp) selectAll('a[href*="wa.me/"], a[href*="api.whatsapp.com/send"], a[href*="web.whatsapp.com/send"]').forEach((link) => {
+    const message = new URL(link.href, window.location.href).searchParams.get('text');
+    link.href = `https://wa.me/${whatsapp}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
   });
   if (data.email) selectAll('a[href^="mailto:"]').forEach((link) => {
     link.href = `mailto:${data.email}`;
@@ -63,8 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     canonical.href = `https://landlineproperties.com/${window.location.pathname.split('/').pop()}`;
     document.head.appendChild(canonical);
   }
-  // Uses the contact number already displayed across the website.
-  const WHATSAPP_NUMBER = '919876543210';
+  const WHATSAPP_NUMBER = LANDLINE_PUBLIC_CONTACT.whatsapp;
   const whatsappMessage = encodeURIComponent('Hi! I would like help with a property enquiry.');
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
@@ -113,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </a>
         </div>
       </div>
-      <button class="wa-widget__toggle" type="button" aria-label="Open WhatsApp chat" aria-expanded="false">
+      <button class="wa-widget__toggle" type="button" aria-label="Chat on WhatsApp">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.52 3.48A11.78 11.78 0 0 0 12.08 0C5.53 0 .2 5.33.2 11.88c0 2.09.55 4.13 1.59 5.92L.1 24l6.36-1.67a11.86 11.86 0 0 0 5.62 1.43h.01c6.55 0 11.88-5.33 11.88-11.88 0-3.17-1.23-6.15-3.45-8.4Zm-8.44 18.27h-.01a9.85 9.85 0 0 1-5.02-1.37l-.36-.21-3.78.99 1.01-3.68-.24-.38a9.85 9.85 0 0 1-1.51-5.23c0-5.44 4.43-9.87 9.88-9.87a9.8 9.8 0 0 1 6.98 2.9 9.8 9.8 0 0 1 2.89 6.99c0 5.45-4.43 9.88-9.87 9.88Z"/></svg>
         <span class="wa-widget__badge" aria-hidden="true"></span>
       </button>
@@ -131,8 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const setWhatsappOpen = (open) => {
     whatsappWidget.classList.toggle('is-open', open);
     whatsappPanel.setAttribute('aria-hidden', String(!open));
-    whatsappToggle.setAttribute('aria-expanded', String(open));
-    whatsappToggle.setAttribute('aria-label', open ? 'Close WhatsApp chat' : 'Open WhatsApp chat');
   };
   const whatsappAutoPopupKey = 'landline-whatsapp-auto-popup-shown';
   let whatsappAutoPopupTimer;
@@ -158,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   whatsappToggle.addEventListener('click', () => {
     cancelWhatsappAutoPopup();
-    setWhatsappOpen(!whatsappWidget.classList.contains('is-open'));
+    window.LandlineContact.openWhatsApp();
   });
   whatsappClose.addEventListener('click', () => {
     cancelWhatsappAutoPopup();
@@ -179,36 +251,49 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!nav || !links) return;
   links.setAttribute('role', 'navigation');
   links.setAttribute('aria-label', 'Primary navigation');
+  if (!links.id) links.id = 'primary-navigation';
 
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-  const activePage = {
-    'property-details.html': 'featured-properties.html',
-    'project-details.html': 'new-projects.html',
-    'gurgaon-properties.html': 'locations.html',
-    'noida-properties.html': 'locations.html',
-    'greater-noida-properties.html': 'locations.html',
-    'delhi-properties.html': 'locations.html'
-  }[currentPage] || currentPage;
-  // Preserve each page's authored navigation; only correct its active state.
-  links.querySelectorAll('a[href]').forEach((link) => {
-    const href = link.getAttribute('href')?.split(/[?#]/)[0];
-    const active = href === activePage;
-    link.classList.toggle('active', active);
-    if (active) link.setAttribute('aria-current', 'page');
-    else link.removeAttribute('aria-current');
-  });
+  const updateNavigationActiveState = () => {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const navigationParams = new URLSearchParams(window.location.search);
+    const selectedLocation = navigationParams.get('location')?.trim().toLowerCase();
+    const selectedRegion = navigationParams.get('region')?.trim().toLowerCase();
+    const delhiNcrPages = ['locations.html', 'gurgaon-properties.html', 'noida-properties.html',
+      'greater-noida-properties.html', 'delhi-properties.html'];
+    const delhiNcrLocations = ['delhi', 'delhi ncr', 'new delhi', 'gurgaon', 'gurugram', 'noida',
+      'greater noida', 'faridabad', 'ghaziabad'];
+    const uttarakhandLocations = ['uttarakhand', 'dehradun', 'mussoorie', 'nainital', 'rishikesh',
+      'haridwar', 'haldwani', 'bhimtal', 'mukteshwar', 'naukuchiatal', 'ramnagar', 'almora'];
+    const isUttarakhand = selectedRegion === 'uttarakhand' || uttarakhandLocations.includes(selectedLocation);
+    let activeHref = null;
+    if (currentPage === 'index.html') activeHref = 'index.html';
+    else if (isUttarakhand) activeHref = 'featured-properties.html?region=uttarakhand';
+    else if (selectedRegion === 'delhi-ncr' || delhiNcrPages.includes(currentPage)
+      || delhiNcrLocations.includes(selectedLocation) || currentPage === 'featured-properties.html') {
+      activeHref = 'featured-properties.html?region=delhi-ncr';
+    }
+    links.querySelectorAll('a[href]').forEach((link) => {
+      const active = link.getAttribute('href') === activeHref;
+      link.classList.toggle('active', active);
+      if (active) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+  };
+  updateNavigationActiveState();
+  document.addEventListener('regionfilterschange', updateNavigationActiveState);
 
   const toggle = document.createElement('button');
   toggle.className = 'mobile-nav-toggle';
   toggle.type = 'button';
   toggle.setAttribute('aria-label', 'Open navigation menu');
+  toggle.setAttribute('aria-controls', links.id);
   toggle.setAttribute('aria-expanded', 'false');
   toggle.innerHTML = '<span></span><span></span><span></span>';
   nav.insertBefore(toggle, nav.querySelector('.nav-buttons'));
 
   const mobileActions = document.createElement('li');
   mobileActions.className = 'mobile-nav-actions';
-  mobileActions.innerHTML = '<a href="contact.html">Get Expert Assistance</a><a href="list-property.html">List Your Property</a>';
+  mobileActions.innerHTML = '<a href="contact.html" class="btn btn-dark">Enquire Now</a>';
   links.appendChild(mobileActions);
 
   const setMenuOpen = (open) => {
@@ -250,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const existingFooter = document.querySelector('footer');
   if (existingFooter) {
-    existingFooter.outerHTML = `<footer class="professional-footer"><div class="container"><div class="footer-top"><div><a class="footer-logo-box" href="index.html" aria-label="Landline Properties home"><img src="image/Landline.png" alt="Landline Properties" width="96" height="68" loading="lazy"></a><p>Landline Properties is your trusted real estate connection for property buying, renting, new projects and local broker assistance across Delhi NCR.</p></div><div><h2>Quick Links</h2><nav class="footer-links" aria-label="Quick links"><a href="index.html">Home</a><a href="featured-properties.html">Buy Property</a><a href="rent.html">Rent Property</a><a href="new-projects.html">New Projects</a><a href="gallery-profile.html">Gallery</a><a href="about.html">About Us</a></nav></div><div><h2>Property Links</h2><nav class="footer-links" aria-label="Property links"><a href="featured-properties.html">Properties for Sale</a><a href="rent.html">Properties for Rent</a><a href="new-projects.html">New Launch Projects</a><a href="locations.html">Browse by Location</a><a href="list-property.html">List Your Property</a></nav></div><div><h2>Contact Landline</h2><div class="footer-contact"><a href="locations.html">Gurgaon · Noida · Greater Noida · Delhi NCR</a><a href="tel:+919876543210" data-site-phone>+91 98765 43210</a><a href="mailto:hello@landline.com">hello@landline.com</a></div><div class="footer-actions"><a class="whatsapp" href="https://wa.me/919876543210" target="_blank" rel="noopener">WhatsApp</a><a href="tel:+919876543210">Call Now</a></div></div></div><div class="footer-bottom"><span>© 2026 Landline Properties. All Rights Reserved.</span><nav class="footer-legal" aria-label="Legal links"><a href="locations.html">Popular Locations</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms-and-conditions.html">Terms &amp; Conditions</a><a href="contact.html">Contact</a></nav></div></div></footer>`;
+    existingFooter.outerHTML = `<footer class="professional-footer"><div class="container"><div class="footer-top"><div><a class="footer-logo-box" href="index.html" aria-label="Landline Properties home"><img src="image/Landline.png" alt="Landline Properties" width="96" height="68" loading="lazy"></a><p>Landline Properties is your trusted real estate connection for property buying, renting, new projects and local broker assistance across Delhi NCR.</p></div><div><h2>Quick Links</h2><nav class="footer-links" aria-label="Quick links"><a href="index.html">Home</a><a href="featured-properties.html">Buy Property</a><a href="rent.html">Rent Property</a><a href="new-projects.html">New Projects</a><a href="gallery-profile.html">Gallery</a><a href="about.html">About Us</a></nav></div><div><h2>Property Links</h2><nav class="footer-links" aria-label="Property links"><a href="featured-properties.html">Properties for Sale</a><a href="rent.html">Properties for Rent</a><a href="new-projects.html">New Launch Projects</a><a href="locations.html">Browse by Location</a><a href="list-property.html">List Your Property</a></nav></div><div><h2>Contact Landline</h2><div class="footer-contact"><a href="locations.html">Gurgaon · Noida · Greater Noida · Delhi NCR</a><a href="tel:+919012622994" data-site-phone>+91 90126 22994</a><a href="mailto:info@landlineproperties.com">info@landlineproperties.com</a></div><div class="footer-actions"><a class="whatsapp" href="https://wa.me/919012622994" target="_blank" rel="noopener">WhatsApp</a><a href="tel:+919012622994">Call Now</a></div></div></div><div class="footer-bottom"><span>© 2026 Landline Properties. All Rights Reserved.</span><nav class="footer-legal" aria-label="Legal links"><a href="locations.html">Popular Locations</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms-and-conditions.html">Terms &amp; Conditions</a><a href="contact.html">Contact</a></nav></div></div></footer>`;
   }
 });
 
@@ -372,22 +457,24 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', () => closeSelect(openSelect), { passive: true });
 });
 
-/* Public business contact details come from the single settings row. */
+/* Keep contact links consistent, including newly rendered property content. */
 document.addEventListener('DOMContentLoaded', async () => {
   const localPreview = location.protocol === 'file:' || (['localhost', '127.0.0.1'].includes(location.hostname) && location.port && location.port !== '5000');
   const origin = String(window.LANDLINE_API_ORIGIN || (localPreview ? 'http://localhost:5000' : location.origin)).replace(/\/$/, '');
+  window.LANDLINE_SITE_SETTINGS = { ...LANDLINE_PUBLIC_CONTACT };
+  applyLandlineContactSettings(window.LANDLINE_SITE_SETTINGS);
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE) applyLandlineContactSettings(window.LANDLINE_SITE_SETTINGS, node);
+    }));
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
   try {
     const response = await fetch(`${origin}/api/settings/public`);
     if (!response.ok) return;
     const { data = {} } = await response.json();
-    window.LANDLINE_SITE_SETTINGS = data;
-    applyLandlineContactSettings(data);
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) applyLandlineContactSettings(data, node);
-      }));
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+    window.LANDLINE_SITE_SETTINGS = { ...data, ...LANDLINE_PUBLIC_CONTACT };
+    applyLandlineContactSettings(window.LANDLINE_SITE_SETTINGS);
   } catch {
     // Static fallback details remain usable when the API is unavailable.
   }

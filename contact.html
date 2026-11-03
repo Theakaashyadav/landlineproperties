@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Contact Us | Landline</title>
-    <meta name="description" content="Contact Landline Properties for personalised assistance with buying, renting, investing or listing property across Delhi NCR.">
+    <meta name="description" content="Contact Landline Properties for personalised assistance with buying, renting, investing or listing property across Delhi NCR and Uttarakhand.">
     <link rel="canonical" href="https://landlineproperties.com/contact.html">
     <link rel="stylesheet" href="pages.css">
     <link rel="stylesheet" href="mobile-nav.css">
@@ -14,38 +14,30 @@
     <link rel="stylesheet" href="complete-page.css">
     <script src="site.js" defer></script>
     <script src="js/landline-api.js" defer></script>
+    <link rel="stylesheet" href="brand-theme.css">
+    <script src="brand-theme.js" defer></script>
 </head>
 
-<body>
+<body class="brand-site">
     <header>
         <div class="container navbar"><a class="header-logo" href="index.html"
                 aria-label="Landline Properties home"><img src="image/Landline.png" alt="LANDLINE PROPERTIES"></a>
-            <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="featured-properties.html">Buy</a></li><li><a href="rent.html">Rent</a></li><li><a href="investment.html">Investment</a></li><li><a href="new-projects.html">New Projects</a></li><li><a href="gallery-profile.html">Gallery</a></li><li><a href="locations.html">Locations</a></li><li><a href="about.html">About Us</a></li></ul>
-            <div class="nav-buttons"><a class="btn active" href="contact.html">Contact</a><a class="btn btn-dark"
-                    href="list-property.html">List Property</a></div>
+            <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="featured-properties.html?region=delhi-ncr">Delhi NCR</a></li><li><a href="featured-properties.html?region=uttarakhand">Uttarakhand</a></li></ul>
+            <div class="nav-buttons"><a href="contact.html" class="btn btn-dark">Enquire Now</a></div>
         </div>
     </header>
     <main>
         <section class="page-hero">
-            <div class="container"><span class="eyebrow">Get Expert Assistance</span>
-                <h1>Looking for Your Next Property?</h1>
-                <p>Tell us what you need and our property experts will help find suitable options.</p>
+            <div class="container brand-visual-intro">
+                <div class="brand-hero-copy"><span class="eyebrow">Get Expert Assistance</span>
+                <h1>A good move starts<br>with a conversation.</h1>
+                <p>Tell us what you need and our property experts will help find suitable options.</p></div>
+                <figure class="brand-hero-visual"><img src="image/home/bright-interior.jpg" alt="A bright contemporary interior, representative home inspiration" width="1000" height="900"><figcaption><small>Your next chapter</small><span>Let us help you find your place.</span></figcaption></figure>
             </div>
         </section>
         <section class="section">
-            <div class="container content-grid">
-                <div><span class="eyebrow">Contact Landline</span>
-                    <h2>We're here to help you move forward.</h2>
-                    <p>Share your preferred location, budget and property requirements. We will connect you with
-                        relevant listings and experts.</p>
-                    <p><strong>📞 +91 98765 43210</strong></p>
-                    <p><strong>✉️ hello@landline.com</strong></p>
-                    <p style="margin-top:22px"><a class="btn btn-dark" href="tel:+919876543210">Call Us</a> <a
-                            class="btn btn-gold" href="https://wa.me/919876543210" target="_blank"
-                            rel="noopener">WhatsApp</a></p> 
-                </div>
-                <form class="contact-form" data-landline-lead-form>
-                    <h2>Get Free Assistance</h2><br>
+            <div class="container content-grid brand-contact-layout"><div class="brand-section-copy"><span class="eyebrow">A more personal property search</span><h2>Tell us where you want to be.</h2><p>Your preferred neighbourhood, a little more room, or a quieter view. Share what matters and we can help you explore suitable options.</p><div class="brand-contact-methods"><a href="tel:+919012622994" data-site-phone>+91 90126 22994</a><a href="mailto:info@landlineproperties.com" data-site-email>info@landlineproperties.com</a></div><figure class="brand-photo-panel"><img src="image/home/living-room.jpg" alt="A welcoming living space, representative home inspiration" width="1100" height="825" loading="lazy"><figcaption>Every good move starts with a little clarity.</figcaption></figure><div class="about-actions"><a class="btn btn-dark" href="tel:+919012622994">Call us</a><a class="btn btn-gold" href="https://wa.me/919012622994" target="_blank" rel="noopener">Chat on WhatsApp</a></div></div><form class="contact-form" data-landline-lead-form>
+                    <h2>Let&rsquo;s make a plan.</h2><br>
                     <div class="form-group"><label>Your Name</label><input name="name" required autocomplete="name" placeholder="Enter your name"></div>
                     <div class="form-group"><label>Mobile Number</label><input name="phone" required type="tel" autocomplete="tel"
                             placeholder="+91 XXXXX XXXXX"></div>
@@ -56,7 +48,7 @@
                             <option>Gurgaon</option>
                             <option>Noida</option>
                             <option>Greater Noida</option>
-                            <option>Delhi NCR</option>
+                            <option>Delhi NCR</option><option>Delhi</option><option>Uttarakhand</option>
                         </select></div>
                     <div class="form-group"><label>Property Requirement</label><select name="requirement" required>
                             <option value="">Select Requirement</option>
@@ -81,7 +73,7 @@
                         </select></div>
                     <div class="form-group"><label>Message</label><textarea name="message"
                             placeholder="Tell us your preferred location, budget, BHK etc."></textarea></div><button
-                        class="btn btn-dark">Get Free Property Assistance</button>
+                        class="btn btn-dark">Send your enquiry &#8599;</button>
                 </form>
             </div>
         </section>

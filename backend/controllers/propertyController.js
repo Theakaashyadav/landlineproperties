@@ -64,6 +64,11 @@ const PUBLIC_LIST_SELECT = [
   'new_launch', 'status', 'created_at', 'updated_at'
 ].join(' ');
 
+const REGION_CITIES = {
+  'delhi-ncr': ['Delhi', 'New Delhi', 'Gurgaon', 'Gurugram', 'Noida', 'Greater Noida', 'Faridabad', 'Ghaziabad', 'Delhi NCR'],
+  uttarakhand: ['Uttarakhand', 'Dehradun', 'Mussoorie', 'Nainital', 'Rishikesh', 'Haridwar', 'Haldwani', 'Bhimtal', 'Mukteshwar', 'Naukuchiatal', 'Ramnagar', 'Almora']
+};
+
 function toPublicProperty(row) {
   return Object.fromEntries(PUBLIC_PROPERTY_KEYS
     .filter(key => Object.prototype.hasOwnProperty.call(row, key))
@@ -107,12 +112,17 @@ function positiveInteger(value, name, fallback, max) {
 // ---------------------------------------------------------------
 const listProperties = asyncHandler(async (req, res) => {
   const {
-    purpose, location, city, type, bhk, furnishing, property_status, min_area,
+    purpose, region, location, city, type, bhk, furnishing, property_status, min_area,
     min_price, max_price, budget, featured, new_launch, q,
     sort = 'newest', page = 1, limit = 12
   } = req.query;
 
   const filter = { status: 'published' };
+  const locationClauses = [];
+  const regionKey = typeof region === 'string' ? region.trim().toLowerCase() : '';
+  if (region !== undefined && region !== '' && !Object.hasOwn(REGION_CITIES, regionKey)) {
+    throw new ApiError(400, 'Invalid property region.');
+  }
 
   const allowedPurposes = ['Buy', 'Rent', 'Commercial'];
   const allowedTypes = ['Apartment', 'Villa', 'Plot', 'Independent House', 'Builder Floor', 'Commercial', 'Office', 'Shop', 'Warehouse', 'Land'];
@@ -136,10 +146,17 @@ const listProperties = asyncHandler(async (req, res) => {
 
   if (purpose) filter.purpose = purpose;
   if (city) filter.city = city;
+  if (regionKey) {
+    const cities = REGION_CITIES[regionKey].map(escapeRegex).join('|');
+    locationClauses.push({ city: { $regex: `\\b(?:${cities})\\b`, $options: 'i' } });
+  }
   if (location) {
     const normalizedLocation = String(location).trim().replace(/-/g, ' ');
-    const pattern = { $regex: escapeRegex(normalizedLocation), $options: 'i' };
-    filter.$or = [{ city: pattern }, { locality: pattern }, { sector: pattern }];
+    const locationPattern = /^(?:gurgaon|gurugram)$/i.test(normalizedLocation)
+      ? '\\b(?:Gurgaon|Gurugram)\\b'
+      : escapeRegex(normalizedLocation);
+    const pattern = { $regex: locationPattern, $options: 'i' };
+    locationClauses.push({ $or: [{ city: pattern }, { locality: pattern }, { sector: pattern }] });
   }
   if (type) filter.property_type = type;
   if (bhk) filter.bhk = bhk;
@@ -156,13 +173,9 @@ const listProperties = asyncHandler(async (req, res) => {
   if (q) {
     const search = { $regex: escapeRegex(q), $options: 'i' };
     const clauses = [{ title: search }, { locality: search }, { description: search }];
-    if (filter.$or) {
-      filter.$and = [{ $or: filter.$or }, { $or: clauses }];
-      delete filter.$or;
-    } else {
-      filter.$or = clauses;
-    }
+    locationClauses.push({ $or: clauses });
   }
+  if (locationClauses.length) filter.$and = locationClauses;
 
   const sortMap = {
     newest: { created_at: -1 },

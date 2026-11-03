@@ -18,25 +18,28 @@
     <link rel="stylesheet" href="gallery-about.css">
     <script src="site.js" defer></script>
     <script src="about.js" defer></script>
+    <link rel="stylesheet" href="brand-theme.css">
+    <script src="brand-theme.js" defer></script>
 </head>
 
-<body>
+<body class="brand-site">
     <header>
         <div class="container navbar"><a class="header-logo" href="index.html"
                 aria-label="Landline Properties home"><img src="image/Landline.png" alt="Landline Properties"></a>
-            <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="featured-properties.html">Buy</a></li><li><a href="rent.html">Rent</a></li><li><a href="investment.html">Investment</a></li><li><a href="new-projects.html">New Projects</a></li><li><a href="gallery-profile.html">Gallery</a></li><li><a href="locations.html">Locations</a></li><li><a class="active" aria-current="page" href="about.html">About Us</a></li></ul>
-            <div class="nav-buttons"><a class="btn" href="contact.html">Get Expert Assistance</a><a class="btn btn-dark"
-                    href="list-property.html">List Your Property</a></div>
+            <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="featured-properties.html?region=delhi-ncr">Delhi NCR</a></li><li><a href="featured-properties.html?region=uttarakhand">Uttarakhand</a></li></ul>
+            <div class="nav-buttons"><a href="contact.html" class="btn btn-dark">Enquire Now</a></div>
         </div>
     </header>
     <main>
         <section class="about-hero">
-            <div class="container reveal"><span class="about-kicker">About Landline Properties</span>
-                <h1>Connecting People With the Right Property Opportunities</h1>
+            <div class="container reveal brand-visual-intro">
+                <div class="brand-hero-copy"><span class="about-kicker">About Landline Properties</span>
+                <h1>More than property.<br>A better connection.</h1>
                 <p>Landline Properties helps buyers, investors, tenants and property owners discover relevant
                     real-estate opportunities across Delhi NCR and emerging markets in Uttarakhand.</p>
                 <div class="about-actions"><a class="btn btn-gold" href="featured-properties.html">Explore
-                        Properties</a><a class="btn outline" href="contact.html">Talk to an Expert</a></div>
+                        Properties</a><a class="btn outline" href="contact.html">Talk to an Expert</a></div></div>
+                <figure class="brand-hero-visual"><img src="image/home/garden-villa.jpg" alt="Contemporary garden residence, representative property inspiration" width="1000" height="900"><figcaption><small>A place for your plans</small><span>Good spaces. Better connections.</span></figcaption></figure>
             </div>
         </section>
 
@@ -73,10 +76,9 @@
                     </div>
                 </div>
                 <figure class="who-visual reveal"><img
-                        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&amp;fit=crop&amp;w=1100&amp;q=85"
-                        alt="Premium property opportunities in Delhi NCR" width="1100" height="900" loading="lazy">
-                    <figcaption><strong>Delhi NCR expertise</strong><span>Property guidance rooted in local
-                            understanding.</span></figcaption>
+                        src="image/home/garden-villa.jpg"
+                        alt="Representative contemporary residence with garden space" width="1100" height="900" loading="lazy">
+                    <figcaption><strong>Room for your next chapter</strong><span>Explore the possibilities with a more personal approach.</span></figcaption>
                 </figure>
             </div>
         </section>
@@ -166,48 +168,7 @@
             </div>
         </section>
 
-        <section class="about-section markets">
-            <div class="container">
-                <div class="about-heading light reveal"><span class="about-kicker">Our markets</span>
-                    <h2>Delhi NCR Today. Uttarakhand Ahead.</h2>
-                    <p>Landline Properties focuses on established and emerging property markets across Delhi NCR while
-                        building opportunities for future expansion into Uttarakhand.</p>
-                </div>
-                <div class="market-grid">
-                    <article
-                        style="--bg:url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80')">
-                        <h3>Noida</h3>
-                        <p>Modern residential communities, commercial spaces and emerging opportunities.</p>
-                    </article>
-                    <article
-                        style="--bg:url('https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=800&q=80')">
-                        <h3>Gurgaon</h3>
-                        <p>Premium residences, established communities and commercial developments.</p>
-                    </article>
-                    <article
-                        style="--bg:url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80')">
-                        <h3>Greater Noida</h3>
-                        <p>Growing communities and new development opportunities.</p>
-                    </article>
-                    <article
-                        style="--bg:url('https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=800&q=80')">
-                        <h3>Delhi</h3>
-                        <p>Established residential and commercial property markets.</p>
-                    </article>
-                    <article
-                        style="--bg:url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80')">
-                        <h3>Delhi NCR</h3>
-                        <p>A wider network of property opportunities across the region.</p>
-                    </article>
-                    <article class="future"
-                        style="--bg:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80')">
-                        <span>Expanding Market</span>
-                        <h3>Uttarakhand</h3>
-                        <p>Emerging opportunities for the future.</p>
-                    </article>
-                </div>
-            </div>
-        </section>
+        <section class="about-section markets"><div class="container"><div class="about-heading light reveal"><span class="about-kicker">Our markets</span><h2>City connections. Mountain possibilities.</h2><p>Explore two distinct ways of living, with property guidance across Delhi NCR and Uttarakhand.</p></div><div class="brand-region-pair"><a class="brand-region-tile" href="featured-properties.html?region=delhi-ncr"><img src="image/home/delhi-ncr-skyline.jpg" alt="Gurgaon skyline in Delhi NCR" width="1300" height="1000" loading="lazy"><div><span>City &amp; connection</span><h3>Delhi NCR</h3><p>Gurgaon, Noida, Greater Noida and the capital region.</p><strong>Explore the region &#8599;</strong></div></a><a class="brand-region-tile" href="featured-properties.html?region=uttarakhand"><img src="image/home/uttarakhand-hills.jpg" alt="Himalayan mountain panorama in Uttarakhand" width="1300" height="1000" loading="lazy"><div><span>Nature &amp; a new perspective</span><h3>Uttarakhand</h3><p>Holiday-home, residential and land opportunities.</p><strong>Explore the region &#8599;</strong></div></a></div></div></section>
 
         <section class="about-section benefits">
             <div class="container">

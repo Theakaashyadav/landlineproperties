@@ -1,0 +1,312 @@
+/* Photo-led home and regional experiences. Shared navigation lives in brand-theme.css. */
+.home-page{--hp-ink:#17283b;--hp-muted:#677180;--hp-gold:#a57c42;--hp-line:#e8e2d7;--hp-paper:#f8f5ef;margin:0;font-family:Arial,Helvetica,sans-serif;line-height:1.6;background:#f8f5ef}
+.home-page *{box-sizing:border-box}
+.home-page a{text-decoration:none;color:inherit}
+.home-page img{display:block}
+.home-page>header{position:sticky;top:0;height:76px}
+.home-page .navbar{display:flex;align-items:center;justify-content:space-between;height:76px;gap:24px}
+.home-page .header-logo{display:flex;align-items:center;height:100%;flex-shrink:0}
+.home-page .nav-links{display:flex;align-items:center;list-style:none;margin:0;padding:0;gap:30px}
+.home-page .nav-buttons{display:flex}
+.home-page .hero{position:relative;isolation:isolate;overflow:hidden;min-height:0;height:auto;padding:54px 0 60px;background:radial-gradient(ellipse at 88% 12%,#28435c 0,transparent 45%),#101e30;color:#fff}
+.home-page .hero::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 46%,#ffffff05 46%,#ffffff05 46.1%,transparent 46.1%);animation:none;transform:none;will-change:auto}
+.home-page .hero::after{display:none}
+.home-page .home-hero-grid{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:38px 55px}
+.home-page .home-hero-copy{max-width:none;padding-block:12px}
+.home-page .home-hero-eyebrow{display:flex;align-items:center;gap:12px;font-size:10px;font-weight:600;letter-spacing:1.9px;text-transform:uppercase;color:#dfbd83;margin-bottom:21px}
+.home-page .home-hero-eyebrow>span{width:30px;height:1px;background:#dfbd83;flex-shrink:0}
+.home-page .hero h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(50px,5.15vw,74px);font-weight:400;letter-spacing:-2.2px;line-height:1.02;margin:0 0 23px;max-width:650px}
+.home-page .hero h1 em{color:#dfbd83;font-weight:400}
+.home-page .hero p{font-size:15px;line-height:1.8;color:#bfccd9;max-width:420px;margin:0 0 22px}
+.home-page .home-hero-link{display:inline-flex;align-items:center;gap:40px;border-bottom:1px solid #dfbd8377;padding-bottom:9px;font-size:12px;font-weight:600;color:#fff}
+.home-page .home-hero-link>span{font-size:21px;color:#dfbd83}
+.home-page .home-hero-values{display:flex;flex-wrap:wrap;gap:8px 15px;margin-top:28px;color:#9dadbd;font-size:10px}
+.home-page .home-hero-values>span+span{padding-left:15px;border-left:1px solid #ffffff30}
+.home-page .home-hero-art{height:425px;position:relative;align-self:stretch;margin:8px 0 15px}
+.home-page .home-scene{position:absolute;display:block;overflow:hidden;isolation:isolate;border:1px solid #ffffff25;border-radius:90px 8px 8px 8px;background:#243d51;box-shadow:0 24px 45px #0004}
+.home-page .home-scene::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,#081320df);z-index:-1}
+.home-page .home-scene>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;transition:transform .7s}
+.home-page .home-scene:hover>img{transform:scale(1.05)}
+.home-page .home-scene-city{inset:0 72px 0 0}
+.home-page .home-scene-city>img{object-position:63% center}
+.home-page .home-scene-hills{width:43%;height:60%;right:-15px;bottom:-8px;border-radius:8px;border:5px solid #15283d}
+.home-page .home-scene-label{position:absolute;inset:auto 25px 25px;display:grid;grid-template-columns:1fr auto;gap:5px}
+.home-page .home-scene-label>small{grid-column:1/-1;text-transform:uppercase;letter-spacing:1.9px;font-size:8px;color:#e0c695}
+.home-page .home-scene-label>strong{font-family:Georgia,serif;font-size:29px;font-weight:400;line-height:1.2;letter-spacing:-.5px;color:#fff}
+.home-page .home-scene-label>span{align-self:center;font-size:23px;color:#dfbd83}
+.home-page .home-scene-hills .home-scene-label{inset:auto 17px 18px}
+.home-page .home-scene-hills .home-scene-label>strong{font-size:23px}
+.home-page .home-art-note{position:absolute;top:22px;right:-10px;display:flex;gap:9px;align-items:center;writing-mode:vertical-rl;color:#bdcbd6;font-size:9px;letter-spacing:1px}
+.home-page .home-art-note>span{color:#dfbd83;font-size:18px}
+.home-page .home-search-panel{grid-column:1/-1;position:relative;z-index:5;background:#fff;border:1px solid #e4d7c1;border-radius:10px;padding:0 25px 21px;box-shadow:0 18px 55px #0003;color:#17283b;margin:0}
+.home-page .home-search-top{display:flex;align-items:center;justify-content:space-between;gap:25px;border-bottom:1px solid #eae6dd;padding:16px 0;margin-bottom:20px}
+.home-page .home-region-picker{display:flex;gap:5px;flex-shrink:0;background:#f3f1eb;border-radius:6px;padding:4px}
+.home-page .home-region-picker>button{display:flex;align-items:center;gap:9px;min-height:39px;border:0;border-radius:4px;padding:8px 15px;background:transparent;font-size:12px;font-weight:600;color:#68717a;cursor:pointer;transition:background .2s,color .2s}
+.home-page .home-region-picker>button[aria-pressed=true]{background:#152b41;color:#fff;box-shadow:0 3px 9px #142a4026}
+.home-page .home-region-picker svg{width:19px;height:19px}
+.home-page .home-region-picker>button[aria-pressed=true] svg{color:#dfbd83}
+.home-page .home-search-top>p{font-size:11px;line-height:1.7;max-width:470px;color:#727b86;margin:0}
+.home-page .home-search-fields{display:grid;grid-template-columns:1.3fr 1.05fr 1fr .9fr 160px;align-items:center;gap:0}
+.home-page .home-search-field{min-width:0;padding:0 17px;border-right:1px solid #e5e1d8}
+.home-page .home-search-field:first-child{padding-left:0}
+.home-page .home-search-field:nth-child(4){border-right:0}
+.home-page .home-search-field>label{display:block;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px;color:#8a704b}
+.home-page .home-search-field>input,.home-page .home-search-field>select{height:36px;min-height:36px;width:100%;min-width:0;border:0;padding:0 12px 0 0;background:#fff;color:#24384d;font:12px Arial,Helvetica,sans-serif;border-radius:0}
+.home-page .home-search-field>input::placeholder{color:#727f8a}
+.home-page .home-search-submit{display:flex;align-items:center;justify-content:space-between;gap:13px;border:0;border-radius:5px;background:#bd9459;color:#101e30;min-height:54px;padding:14px 18px;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s,transform .2s}
+.home-page .home-search-submit>svg{width:20px;height:20px}
+.home-page .home-search-submit:hover{background:#dfbd83;transform:translateY(-2px)}
+.home-page .hp-section{padding:85px 0}
+.home-page .hp-kicker{font-size:11px;letter-spacing:2px;color:#a57c42}
+.home-page .hp-section h2{font-size:clamp(36px,3.6vw,52px);color:#17283b}
+.home-page .hp-heading-aside>p,.home-page .hp-heading-description{font-size:15px;line-height:1.8;color:#677180}
+.home-page .hp-text-link{font-size:13px;border-color:#bd9459;color:#17283b}
+.home-page .hp-properties{background:linear-gradient(180deg,#fff 65%,#faf7f1)}
+.home-page .home-listing-card{border-color:#e7e0d3;border-radius:10px;box-shadow:0 8px 28px #152b410a}
+.home-page .home-listing-card:hover{box-shadow:0 18px 42px #152b411a;transform:translateY(-7px)}
+.home-page .home-listing-media{height:275px}
+.home-page .home-listing-body{padding:25px}
+.home-page .home-listing-location{font-size:10px;color:#94703e}
+.home-page .home-listing-title{font-size:26px;color:#17283b}
+.home-page .home-listing-specs{font-size:12px;line-height:1.8}
+.home-page .home-listing-footer{padding-top:18px}
+.home-page .home-listing-enquire{font-size:12px;color:#17283b}
+.home-page .home-listing-enquire>span{display:grid;place-items:center;width:29px;height:29px;border-radius:50%;background:#f0e7d7;color:#7f6138}
+.home-page .hp-card-caption,.home-page .hp-inventory-note{font-size:12px}
+.home-page .hp-locations{position:relative;background:#101e30;color:#fff}
+.home-page .hp-locations h2{color:#fff}
+.home-page .hp-locations .hp-kicker{color:#dfbd83}
+.home-page .hp-locations h2 em{color:#dfbd83}
+.home-page .hp-locations .hp-heading-description{color:#acbdcd}
+.home-page .hp-region-card{height:450px;border-radius:9px;border:1px solid #ffffff25;box-shadow:0 16px 35px #0003}
+.home-page .hp-region-top{top:27px}
+.home-page .hp-region-top>span:first-child{font-size:10px;letter-spacing:1.5px}
+.home-page .hp-round-arrow{width:43px;height:43px;background:#ffffff14;border-color:#ffffff70}
+.home-page .hp-region-copy>h3{font-size:50px}
+.home-page .hp-region-copy>p,.home-page .hp-region-copy>span:not(.hp-region-explore){font-size:13px}
+.home-page .hp-region-explore{font-size:12px}
+.home-page .hp-location-links{border-color:#ffffff25;padding-block:23px}
+.home-page .hp-location-links>span{color:#a2b4c4;font-size:12px}
+.home-page .hp-location-links>a{color:#e0e6eb;font-size:12px}
+.home-page .hp-approach-grid{gap:80px}
+.home-page .hp-approach-photo>img{border-radius:7px 70px 7px 7px}
+.home-page .hp-photo-note{background:#f4ecdc;border:1px solid #e1ccaa;padding:24px 30px}
+.home-page .hp-photo-note>p{font-size:20px;color:#283b4d}
+.home-page .hp-approach-copy>p{font-size:15px;color:#677180}
+.home-page .hp-steps h3{font-size:16px;color:#20354a}
+.home-page .hp-steps>li>span{flex-shrink:0;min-width:20px;white-space:nowrap}
+.home-page .hp-steps p{font-size:13px;color:#677180}
+.home-page .hp-button-dark{background:#152b41;color:#fff}
+.home-page .hp-button-dark:hover{background:#274662}
+.home-page .hp-button{font-size:13px;padding-inline:23px;min-height:49px}
+.home-page .hp-possibilities{background:#f4efe5}
+.home-page .hp-path-grid{border-color:#ddd2c1;background:#fbf9f5;box-shadow:0 14px 30px #152b4108}
+.home-page .hp-path{padding:32px 27px}
+.home-page .hp-path:hover{background:#152b41;color:#fff}
+.home-page .hp-path h3{font-size:25px}
+.home-page .hp-path p{font-size:13px;color:#677180}
+.home-page .hp-path:hover p{color:#bdcad6}
+.home-page .hp-path>svg{color:#a57c42;width:38px;height:38px}
+.home-page .hp-path-action{font-size:12px}
+.home-page .hp-path:hover .hp-path-action{color:#dfbd83}
+.home-page .hp-contact{background:radial-gradient(ellipse at 0 100%,#2b435b,transparent 60%),#101e30;color:#fff}
+.home-page .hp-contact h2{color:#fff}
+.home-page .hp-contact h2 em{color:#dfbd83}
+.home-page .hp-contact-copy>p{font-size:15px;color:#aebfce}
+.home-page .hp-contact-tags>span{font-size:11px;color:#f0dec0;border-color:#bd945966}
+.home-page .hp-contact-image{height:255px;border:1px solid #ffffff26}
+.home-page .hp-enquiry-form{background:#fcfaf6;box-shadow:0 24px 60px #0003;border:1px solid #c3aa8055;padding:38px}
+.home-page .hp-enquiry-form>h3{font-size:32px}
+.home-page .hp-enquiry-form>p{font-size:13px}
+.home-page .hp-field label{font-size:12px;color:#293e52}
+.home-page .hp-field input,.home-page .hp-field select,.home-page .hp-field textarea{font-size:13px;background:#fff;border-color:#ded8cc;padding:13px 11px}
+.home-page .hp-enquiry-form>.hp-form-footnote{font-size:11px}
+.home-page .hp-faq-list summary{font-size:16px;padding-block:25px}
+.home-page .hp-faq-list details>p{font-size:14px}
+/* Keep the results close to the controls, with a regional photographic identity. */
+.region-listing-page{--region-ink:#17283b;--region-muted:#677180;--region-line:#e4ddcf;--region-paper:#f8f5ef;background:#f8f5ef}
+.region-listing-page .region-intro{position:relative;isolation:isolate;padding:26px 0 62px;background:#101e30;color:#fff;overflow:hidden}
+.region-listing-page .region-intro::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#101e30 4%,#101e30f0 38%,#101e30a8 68%,#101e3044),url('image/home/delhi-ncr-skyline.jpg') right 46%/cover}
+.region-listing-page[data-region=uttarakhand] .region-intro::before{background-image:linear-gradient(90deg,#101e30 4%,#101e30ed 38%,#101e30a3 68%,#101e3044),url('image/home/uttarakhand-hills.jpg');background-position:center}
+.region-listing-page .region-breadcrumb{color:#aabccb;font-size:11px;margin-bottom:22px}
+.region-listing-page .region-breadcrumb>span:last-child{color:#e9d3ad}
+.region-listing-page .region-intro .region-kicker{color:#dfbd83;font-size:10px}
+.region-listing-page .region-intro h1{font-size:46px;letter-spacing:-1px}
+.region-listing-page .region-intro p{font-size:14px;color:#c0cdda;max-width:630px}
+.region-listing-page .region-switch{background:#ffffff12;border-color:#ffffff35;backdrop-filter:blur(10px)}
+.region-listing-page .region-switch>a{color:#e4eaf0;font-size:12px;padding:10px 17px}
+.region-listing-page .region-switch>a.active{background:#dfbd83;color:#101e30}
+.region-listing-page .region-switch>a:hover{background:#ffffff23;color:#fff}
+.region-listing-page .region-search-section{position:relative;z-index:5;margin-top:-30px}
+.region-listing-page .region-search-form{border-color:#e2d6c2;border-radius:9px;box-shadow:0 12px 36px #152b4112;padding:18px 22px 0}
+.region-listing-page .region-keyword-field input{font-size:14px}
+.region-listing-page .region-location-field>label,.region-listing-page .region-filter-field>label{color:#8b6d40;font-size:10px}
+.region-listing-page .region-location-field select,.region-listing-page .region-filter-field select{font-size:13px;color:#17283b;min-height:34px}
+.region-listing-page .region-search-button{background:#152b41;color:#fff;font-size:13px;min-height:51px}
+.region-listing-page .region-search-button:hover{background:#2a4965}
+.region-listing-page .region-filter-chip{background:#f1ebe0;border-color:#ddcfb5;color:#785d35;font-size:11px}
+.region-listing-page .region-more-filters summary{font-size:12px;color:#293f54}
+.region-listing-page .region-clear-button{font-size:11px;color:#755a34}
+.region-listing-page .region-results-heading h2{font-size:31px;color:#17283b}
+.region-listing-page .region-results-heading .region-kicker{font-size:10px;color:#977341}
+.region-listing-page .region-sort-field label{font-size:12px}
+.region-listing-page .region-sort-field select{font-size:12px;border-color:#dfd6c6}
+.region-listing-page .region-inventory-note{background:#f0e9dc;color:#706049;border-color:#bd9459;font-size:12px}
+.region-listing-page .regional-card{border-color:#e3dccf;border-radius:9px;box-shadow:0 7px 24px #152b4108}
+.region-listing-page .regional-card:hover{box-shadow:0 18px 38px #152b411a}
+.region-listing-page .regional-card-media{height:255px}
+.region-listing-page .regional-card-badge{font-size:10px;padding:6px 11px}
+.region-listing-page .regional-card-body{padding:24px}
+.region-listing-page .regional-card-title{font-size:26px;color:#17283b}
+.region-listing-page .regional-card-location{font-size:10px;color:#96723f}
+.region-listing-page .regional-card-specs{font-size:12px;color:#677180}
+.region-listing-page .regional-card-description{font-size:13px;color:#677180}
+.region-listing-page .regional-card-action{font-size:11px;color:#17283b}
+.region-listing-page .regional-card-category{font-size:11px;color:#677180}
+.region-listing-page .regional-card-enquire{background:#152b41;font-size:12px;min-height:44px}
+.region-listing-page .regional-card-enquire:hover{background:#2a4965}
+.region-listing-page .regional-image-note{background:#101e30df;font-size:9px}
+.region-listing-page .region-shortlist{background:#ede6d9;border-color:#daceb8}
+.region-listing-page .region-shortlist h3{color:#17283b;font-size:26px}
+.region-listing-page .region-shortlist p{font-size:13px;color:#677180}
+.region-listing-page .region-empty h3{color:#17283b}
+.region-listing-page .region-empty-icon{color:#a57c42;background:#f4ecdc}
+@media(max-width:1100px){
+ .home-page .home-hero-grid{gap:30px}
+ .home-page .hero h1{font-size:61px}
+ .home-page .home-hero-art{height:400px}
+ .home-page .home-scene-city{right:40px}
+ .home-page .home-scene-hills{right:-5px}
+ .home-page .home-search-panel{padding-inline:20px}
+ .home-page .home-search-fields{grid-template-columns:1.1fr 1fr 1fr .9fr}
+ .home-page .home-search-submit{grid-column:1/-1;margin-top:18px;justify-content:center;gap:25px;min-height:46px}
+ .home-page .home-search-field{padding-inline:12px}
+ .home-page .home-listing-media{height:235px}
+ .home-page .home-listing-body{padding:22px 19px}
+ .home-page .home-listing-title{font-size:23px}
+ .home-page .hp-path{padding:28px 21px}
+ .home-page .hp-path h3{font-size:23px}
+ .home-page .hp-enquiry-form{padding:30px}
+ .region-listing-page .region-intro h1{font-size:40px}
+ .region-listing-page .region-switch>a{font-size:11px;padding:10px 13px}
+ .region-listing-page .regional-card-title{font-size:23px}
+ .region-listing-page .regional-card-body{padding:22px 19px}
+ .region-listing-page .regional-card-media{height:220px}
+}
+@media(max-width:800px){
+ .home-page .hero{padding-top:40px}
+ .home-page .home-hero-grid{gap:30px 25px}
+ .home-page .hero h1{font-size:50px;letter-spacing:-1.7px}
+ .home-page .hero p{font-size:14px}
+ .home-page .home-hero-eyebrow{font-size:8px;gap:9px;letter-spacing:1.3px}
+ .home-page .home-hero-art{height:385px}
+ .home-page .home-scene-city{right:25px;border-top-left-radius:60px}
+ .home-page .home-scene-hills{width:55%;height:54%}
+ .home-page .home-scene-label{inset:auto 18px 22px}
+ .home-page .home-scene-label>strong{font-size:26px}
+ .home-page .home-scene-hills .home-scene-label>strong{font-size:20px}
+ .home-page .home-art-note{display:none}
+ .home-page .home-search-top{gap:18px}
+ .home-page .home-search-top>p{font-size:10px;max-width:250px}
+ .home-page .home-region-picker>button{padding:8px 12px;font-size:11px}
+ .home-page .home-search-fields{grid-template-columns:1fr 1fr}
+ .home-page .home-search-field{padding:9px 13px;border-bottom:1px solid #ebe5d9}
+ .home-page .home-search-field:nth-child(odd){padding-left:0}
+ .home-page .home-search-field:nth-child(even){border-right:0}
+ .home-page .home-search-field>label{font-size:9px}
+ .home-page .home-listing-media{height:195px}
+ .home-page .home-listing-body{padding:20px 15px}
+ .home-page .home-listing-title{font-size:21px}
+ .home-page .home-listing-specs{font-size:11px}
+ .home-page .hp-region-card{height:395px}
+ .home-page .hp-region-copy>h3{font-size:42px}
+ .home-page .hp-approach-grid{gap:35px}
+ .home-page .hp-contact-grid{gap:32px}
+ .home-page .hp-enquiry-form{padding:25px}
+ .region-listing-page .region-intro .region-switch{margin-top:20px}
+}
+@media(max-width:600px){
+ .home-page .hero{padding:37px 0 35px!important;overflow:hidden}
+ .home-page .hero::before{inset:0;display:block;background:linear-gradient(100deg,#101e30f5,#101e30bd),url('image/home-hero-luxury-evening-v2.png') center/cover;z-index:-1}
+ .home-page[data-home-region=uttarakhand] .hero::before{background-image:linear-gradient(100deg,#101e30f2,#101e30b8),url('image/home/uttarakhand-hills.jpg')}
+ .home-page .home-hero-grid{grid-template-columns:1fr;gap:24px}
+ .home-page .home-hero-copy{padding:0 6px}
+ .home-page .home-hero-eyebrow{font-size:8px;letter-spacing:1.3px;margin-bottom:20px}
+ .home-page .hero h1{font-size:49px!important;line-height:1.03!important;letter-spacing:-1.6px;margin-bottom:18px}
+ .home-page .hero h1 br:nth-of-type(2){display:none}
+ .home-page .hero p{font-size:14px;line-height:1.8;max-width:350px;margin-bottom:17px}
+ .home-page .home-hero-link{font-size:11px;gap:30px;padding-bottom:7px}
+ .home-page .home-hero-values{font-size:9px;gap:8px 11px;margin-top:21px}
+ .home-page .home-hero-values>span+span{padding-left:11px}
+ .home-page .home-hero-art{display:none}
+ .home-page .home-search-panel{padding:0 17px 17px;grid-column:1;border-radius:8px}
+ .home-page .home-search-top{display:block;padding:14px 0;margin-bottom:6px}
+ .home-page .home-region-picker{width:100%;justify-content:stretch;gap:5px}
+ .home-page .home-region-picker>button{flex:1;justify-content:center;min-height:40px;padding:9px 8px;font-size:12px}
+ .home-page .home-region-picker svg{width:18px;height:18px}
+ .home-page .home-search-top>p{max-width:100%;font-size:10px;line-height:1.7;padding:10px 2px 0;margin:0}
+ .home-page .home-search-field{padding:10px 9px;min-height:75px}
+ .home-page .home-search-field>label{font-size:8px;line-height:1.5;letter-spacing:.5px;margin-bottom:3px}
+ .home-page .home-search-field>input,.home-page .home-search-field>select{font-size:12px;min-height:31px;height:31px;padding-right:5px}
+ .home-page .home-search-submit{margin-top:14px;min-height:45px;font-size:12px;padding-block:11px}
+ .home-page .hp-section{padding:57px 0}
+ .home-page .hp-section h2{font-size:37px!important;line-height:1.13!important}
+ .home-page .hp-kicker{font-size:10px}
+ .home-page .hp-heading-aside>p,.home-page .hp-heading-description{font-size:14px}
+ .home-page .home-listing-media{height:265px}
+ .home-page .home-listing-body{padding:24px 22px}
+ .home-page .home-listing-title{font-size:27px}
+ .home-page .home-listing-specs{font-size:12px}
+ .home-page .hp-region-card{height:390px}
+ .home-page .hp-region-top>span:first-child{font-size:8px}
+ .home-page .hp-region-copy>h3{font-size:43px}
+ .home-page .hp-region-copy>p,.home-page .hp-region-copy>span:not(.hp-region-explore){font-size:12px}
+ .home-page .hp-location-links{gap:7px 20px}
+ .home-page .hp-approach-photo{min-height:400px}
+ .home-page .hp-approach-copy>p{font-size:14px}
+ .home-page .hp-steps h3{font-size:15px}
+ .home-page .hp-steps p{font-size:13px}
+ .home-page .hp-photo-note{padding:20px 24px}
+ .home-page .hp-photo-note>p{font-size:18px}
+ .home-page .hp-path{padding:27px 18px 24px}
+ .home-page .hp-path h3{font-size:23px}
+ .home-page .hp-path p{font-size:12px}
+ .home-page .hp-path-action{font-size:11px}
+ .home-page .hp-enquiry-form{padding:28px 23px}
+ .home-page .hp-contact-copy>p{font-size:14px}
+ .home-page .hp-field label{font-size:11px}
+ .home-page .hp-faq-list summary{font-size:14px}
+ .home-page .hp-faq-list details>p{font-size:13px}
+ .region-listing-page .region-intro{padding:23px 0 55px}
+ .region-listing-page .region-intro h1{font-size:34px!important;line-height:1.2!important}
+ .region-listing-page .region-intro p{font-size:13px}
+ .region-listing-page .region-breadcrumb{font-size:10px}
+ .region-listing-page .region-switch>a{font-size:11px;padding:8px 16px}
+ .region-listing-page .region-search-section{margin-top:-27px}
+ .region-listing-page .region-search-form{padding:12px 15px 0}
+ .region-listing-page .region-keyword-field input{font-size:13px}
+ .region-listing-page .region-location-field>label,.region-listing-page .region-filter-field>label{font-size:9px}
+ .region-listing-page .region-location-field select,.region-listing-page .region-filter-field select{font-size:12px}
+ .region-listing-page .region-search-button{font-size:11px;min-height:45px;padding-inline:11px}
+ .region-listing-page .region-more-filters summary{font-size:12px}
+ .region-listing-page .region-results-heading h2{font-size:27px!important}
+ .region-listing-page .region-inventory-note{font-size:11px}
+ .region-listing-page .regional-card-media{height:265px}
+ .region-listing-page .regional-card-body{padding:25px 22px}
+ .region-listing-page .regional-card-title{font-size:27px}
+ .region-listing-page .regional-card-specs{font-size:12px}
+ .region-listing-page .regional-card-action,.region-listing-page .regional-card-category{font-size:11px}
+ .region-listing-page .region-shortlist h3{font-size:24px}
+ .region-listing-page .region-shortlist p{font-size:12px}
+}
+@media(max-width:360px){
+ .home-page .hero h1{font-size:43px!important}
+ .home-page .home-search-panel{padding-inline:13px}
+ .home-page .home-search-field>input,.home-page .home-search-field>select{font-size:11px}
+ .home-page .home-search-field>label{font-size:7.5px}
+ .home-page .home-listing-media,.region-listing-page .regional-card-media{height:230px}
+ .home-page .hp-path{padding-inline:14px}
+ .home-page .hp-path h3{font-size:21px}
+ .region-listing-page .region-intro h1{font-size:30px!important}
+ .region-listing-page .regional-card-action{font-size:10px}
+}

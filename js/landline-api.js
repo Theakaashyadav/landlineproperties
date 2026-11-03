@@ -54,6 +54,34 @@
     return `<article class="card"><div class="card-img"><img src="${esc(image(property.cover_image))}" alt="${esc(`${property.title} in ${property.city}`)}" width="900" height="600" loading="lazy" decoding="async">${badge ? `<span class="badge">${badge}</span>` : ''}</div><div class="card-body"><h2>${esc(property.title)}</h2><p class="location">${esc([property.locality, property.city].filter(Boolean).join(', '))}</p><div class="details">${property.bhk ? `<span>${esc(property.bhk)}</span>` : ''}${property.area ? `<span>${esc(property.area)} ${esc(property.area_unit || 'Sq.Ft.')}</span>` : ''}</div><p class="price">${price(property.price, property.price_label, property.purpose)}</p><div class="card-actions"><a class="btn" href="property-details.html?slug=${encodeURIComponent(property.slug)}">View Property</a><a class="btn btn-dark" href="contact.html?property=${encodeURIComponent(property.id)}">Enquire</a></div></div></article>`;
   }
 
+  function homeCard(property) {
+    const title = esc(property.title);
+    const detailsUrl = `property-details.html?slug=${encodeURIComponent(property.slug)}`;
+    const coverImage = property.cover_image ? image(property.cover_image) : 'image/home/modern-residence.jpg';
+    const imageNote = property.cover_image ? '' : '<span class="home-listing-image-note">Representative image</span>';
+    const badge = property.featured ? 'Featured' : property.new_launch ? 'New launch' : property.purpose || property.property_type || '';
+    const specifications = [property.bhk, property.area ? `${property.area} ${property.area_unit || 'Sq.Ft.'}` : '', property.property_type].filter(Boolean);
+    return `<article class="home-listing-card"><div class="home-listing-media"><a href="${detailsUrl}" aria-label="View ${title}"><img src="${esc(coverImage)}" alt="${esc(`${property.title} in ${property.city}`)}" width="900" height="600" loading="lazy" decoding="async"></a>${badge ? `<span class="home-listing-badge">${esc(badge)}</span>` : ''}${imageNote}</div><div class="home-listing-body"><p class="home-listing-location">${esc([property.locality, property.city].filter(Boolean).join(', '))}</p><h3 class="home-listing-title"><a href="${detailsUrl}">${title}</a></h3><div class="home-listing-specs">${specifications.map(value => `<span>${esc(value)}</span>`).join('')}</div><div class="home-listing-footer"><p class="home-listing-price">${price(property.price, property.price_label, property.purpose)}</p><a class="home-listing-enquire" href="contact.html?property=${encodeURIComponent(property.id)}" aria-label="Enquire about ${title}">Enquire <span aria-hidden="true">&#8599;</span></a></div></div></article>`;
+  }
+
+  function loadHomeFeaturedProjects() {
+    const grid = document.getElementById('home-property-grid');
+    if (!grid) return;
+    const slugs = [...grid.querySelectorAll('[data-home-project]')].map(element => element.dataset.homeProject);
+    const projects = slugs.map(slug => window.LandlineProjects?.find?.(slug)).filter(Boolean);
+    if (projects.length && projects.length === slugs.length) {
+      grid.innerHTML = projects.map((project, index) => {
+        const title = esc(project.name);
+        const detailsUrl = `project-details.html?slug=${encodeURIComponent(project.slug)}`;
+        const enquiryUrl = `contact.html?requirement=project-enquiry&project=${encodeURIComponent(project.slug)}&location=${encodeURIComponent(project.city)}`;
+        const specifications = [project.configuration, project.developer].filter(Boolean);
+        return `<article class="home-listing-card" data-home-project="${esc(project.slug)}"><div class="home-listing-media"><a href="${detailsUrl}" aria-label="View ${title}"><img src="${esc(image(project.image))}" alt="${esc(project.image_alt || `${project.name} in ${project.city}`)}" width="900" height="600" loading="lazy" decoding="async"></a><span class="home-listing-badge">${esc(project.project_status)}</span><span class="hp-image-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>${project.image_note ? `<span class="home-listing-image-note">${esc(project.image_note)}</span>` : ''}</div><div class="home-listing-body"><p class="home-listing-location">${esc([project.locality, project.city].filter(Boolean).join(', '))}</p><h3 class="home-listing-title"><a href="${detailsUrl}">${title}</a></h3><div class="home-listing-specs">${specifications.map(value => `<span>${esc(value)}</span>`).join('')}</div><div class="home-listing-footer"><p class="home-listing-price">${price(project.starting_price, project.price_label, 'Buy')}</p><a class="home-listing-enquire" href="${enquiryUrl}" aria-label="Enquire about ${title}">Enquire <span aria-hidden="true">&#8599;</span></a></div></div></article>`;
+      }).join('');
+    }
+    grid.dataset.inventoryState = 'catalog';
+    grid.removeAttribute('aria-busy');
+  }
+
   function queryForPage(defaultPurpose) {
     const incoming = new URLSearchParams(location.search);
     const requestedPurpose = incoming.get('purpose') || defaultPurpose;
@@ -95,15 +123,31 @@
 
   async function loadSelected(grid, query, empty) {
     if (!grid) return;
+    const isHomeGrid = grid.id === 'home-property-grid';
+    const browseMarkup = isHomeGrid && grid.querySelector('[data-home-property-browse]') ? grid.innerHTML : '';
+    const inventoryNote = isHomeGrid ? document.querySelector('[data-home-inventory-note]') : null;
     grid.setAttribute('aria-busy', 'true');
-    grid.innerHTML = stateMarkup('Loading current properties…');
+    if (browseMarkup) grid.dataset.inventoryState = 'browse';
+    else grid.innerHTML = stateMarkup('Loading current properties…');
     try {
       const result = await request(`/properties?${query}`);
-      const properties = Array.isArray(result.data) ? result.data : [];
-      grid.innerHTML = properties.length ? properties.map(card).join('') : stateMarkup(empty || 'No published properties are available right now. Please check back soon or contact our team.');
+      let properties = Array.isArray(result.data) ? result.data : [];
+      if (isHomeGrid && !properties.length && new URLSearchParams(query).get('featured') === 'true') {
+        const latest = await request('/properties?limit=3');
+        properties = Array.isArray(latest.data) ? latest.data : [];
+      }
+      if (properties.length) {
+        grid.innerHTML = properties.map(isHomeGrid ? homeCard : card).join('');
+        if (isHomeGrid) grid.dataset.inventoryState = 'live';
+        if (inventoryNote) inventoryNote.hidden = true;
+      } else if (!browseMarkup) {
+        grid.innerHTML = stateMarkup(empty || 'No published properties are available right now. Please check back soon or contact our team.');
+      }
     } catch (error) {
-      grid.innerHTML = stateMarkup(error.message, true);
-      grid.querySelector('[data-api-retry]')?.addEventListener('click', () => loadSelected(grid, query, empty), { once: true });
+      if (!browseMarkup) {
+        grid.innerHTML = stateMarkup(error.message, true);
+        grid.querySelector('[data-api-retry]')?.addEventListener('click', () => loadSelected(grid, query, empty), { once: true });
+      }
     } finally {
       grid.removeAttribute('aria-busy');
     }
@@ -190,7 +234,7 @@
     form.addEventListener('submit', async event => {
       event.preventDefault();
       const button = form.querySelector('button[type="submit"], button:not([type])');
-      const label = button?.textContent;
+      const label = button ? [...button.childNodes].map(node => node.cloneNode(true)) : [];
       if (button) { button.disabled = true; button.textContent = 'Submitting…'; }
       const values = Object.fromEntries(new FormData(form));
       Object.entries(values).forEach(([key, value]) => {
@@ -207,7 +251,7 @@
       } catch (error) {
         showFormStatus(form, error.message, true);
       } finally {
-        if (button) { button.disabled = false; button.textContent = label; }
+        if (button) { button.disabled = false; button.replaceChildren(...label); }
       }
     });
   }
@@ -218,7 +262,7 @@
     if (page === 'rent.html') loadListing('Rent');
     if (page === 'new-projects.html') loadSelected(document.getElementById('new-project-grid'), 'new_launch=true&limit=12', 'No new launches are published yet. Contact our team for current project opportunities.');
     if (page === 'index.html') {
-      loadSelected(document.getElementById('home-property-grid'), 'featured=true&limit=3', 'No featured properties are published right now. Browse all current properties or contact our team.');
+      loadHomeFeaturedProjects();
       loadProjectsSelected(document.getElementById('home-project-grid'), 'limit=3', 'No published projects are available right now. Browse the projects page for updates.');
     }
     if (page === 'property-details.html') loadDetails();

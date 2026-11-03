@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>List Your Property | Landline</title>
-    <meta name="description" content="List your property for sale or rent with Landline Properties and connect with relevant buyers and tenants across Delhi NCR.">
+    <meta name="description" content="List your property for sale or rent with Landline Properties and connect with relevant buyers and tenants across Delhi NCR and Uttarakhand.">
     <link rel="canonical" href="https://landlineproperties.com/list-property.html">
     <link rel="stylesheet" href="pages.css">
     <link rel="stylesheet" href="mobile-nav.css">
@@ -14,40 +14,32 @@
     <link rel="stylesheet" href="complete-page.css">
     <script src="site.js" defer></script>
     <script src="js/landline-api.js" defer></script>
+    <link rel="stylesheet" href="brand-theme.css">
+    <script src="brand-theme.js" defer></script>
 </head>
 
-<body>
+<body class="brand-site">
     <header>
         <div class="container navbar"><a class="header-logo" href="index.html"
                 aria-label="Landline Properties home"><img src="image/Landline.png" alt="LANDLINE PROPERTIES"></a>
-            <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="featured-properties.html">Buy</a></li><li><a href="rent.html">Rent</a></li><li><a href="investment.html">Investment</a></li><li><a href="new-projects.html">New Projects</a></li><li><a href="gallery-profile.html">Gallery</a></li><li><a href="locations.html">Locations</a></li><li><a href="about.html">About Us</a></li></ul>
-            <div class="nav-buttons"><a class="btn" href="contact.html">Contact</a><a class="btn btn-dark"
-                    href="list-property.html">List Property</a></div>
+            <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="featured-properties.html?region=delhi-ncr">Delhi NCR</a></li><li><a href="featured-properties.html?region=uttarakhand">Uttarakhand</a></li></ul>
+            <div class="nav-buttons"><a href="contact.html" class="btn btn-dark">Enquire Now</a></div>
         </div>
     </header>
     <main>
         <section class="page-hero">
-            <div class="container"><span class="eyebrow">For Owners</span>
-                <h1>List Your Property With Landline</h1>
-                <p>Connect with genuine buyers and tenants looking for their next property.</p>
+            <div class="container brand-visual-intro">
+                <div class="brand-hero-copy"><span class="eyebrow">For Owners</span>
+                <h1>A new chapter<br>for your property.</h1>
+                <p>Introduce your space to people planning their next move.</p></div>
+                <figure class="brand-hero-visual"><img src="image/home/modern-residence.jpg" alt="Modern residence, representative property inspiration" width="1000" height="900"><figcaption><small>For property owners</small><span>Every space has a story.</span></figcaption></figure>
             </div>
         </section>
         <section class="section">
             <div class="container">
-                <div class="sell-banner"><span class="eyebrow">Reach the right audience</span>
-                    <h2>Have a Property to Sell or Rent?</h2>
-                    <p>Share the basics below and our team will help you present your property to qualified prospects.
-                    </p>
-                </div>
-                <div class="content-grid" style="margin-top:45px">
-                    <div><span class="eyebrow">Why list with us</span>
-                        <h2>Professional support for every listing.</h2>
-                        <p>Landline connects property owners and brokers with a network of active buyers and tenants
-                            across Delhi NCR.</p>
-                        <p>Our local team can guide you through listing details, enquiries and site visits.</p>
-                    </div>
-                    <form class="contact-form" data-landline-listing-form>
-                        <h2>List Your Property</h2><br>
+
+                <div class="content-grid brand-listing-layout"><div class="brand-section-copy"><span class="eyebrow">For a property with potential</span><h2>Make the right introduction.</h2><p>Share your property with people exploring their next home, address or investment. Start with the details that make your space different.</p><figure class="brand-photo-panel"><img src="image/home/garden-villa.jpg" alt="Contemporary residence with outdoor space, representative property imagery" width="1100" height="733" loading="lazy"><figcaption>A space worth discovering.</figcaption></figure><ol class="brand-copy-steps"><li><strong>01</strong><span>Tell us about your property and preferred terms.</span></li><li><strong>02</strong><span>Our team can help clarify the details.</span></li><li><strong>03</strong><span>Connect over relevant enquiries and property visits.</span></li></ol></div><form class="contact-form" data-landline-listing-form>
+                        <h2>Tell us about your space.</h2><br>
                         <div class="form-group"><label>Your Name</label><input name="name" required autocomplete="name" placeholder="Enter your name">
                         </div>
                         <div class="form-group"><label>Mobile Number</label><input name="phone" required type="tel" autocomplete="tel"
@@ -59,7 +51,7 @@
                                 <option>Independent House</option>
                                 <option value="Commercial">Commercial Property</option>
                             </select></div>
-                        <div class="form-group"><label>City</label><select name="city" required><option value="">Select city</option><option>Gurgaon</option><option>Noida</option><option>Greater Noida</option><option>Delhi NCR</option></select></div>
+                        <div class="form-group"><label>City</label><select name="city" required><option value="">Select city</option><option>Gurgaon</option><option>Noida</option><option>Greater Noida</option><option>Delhi NCR</option><option>Delhi</option><option>Uttarakhand</option></select></div>
                         <div class="form-group"><label>Property Location &amp; Details</label><textarea name="description" required
                                 placeholder="Location, BHK, size, expected price or rent"></textarea></div><button
                             class="btn btn-gold">Submit Property</button>

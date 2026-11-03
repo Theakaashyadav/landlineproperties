@@ -18,32 +18,26 @@
     <link rel="stylesheet" href="discovery.css">
     <script src="site.js" defer></script>
     <script src="location-search.js" defer></script>
+    <link rel="stylesheet" href="brand-theme.css">
+    <script src="brand-theme.js" defer></script>
 </head>
 
-<body>
+<body class="brand-site">
     <header class="market-header">
         <div class="container navbar"><a class="header-logo" href="index.html"><img src="image/Landline.png"
                     alt="Landline Properties"></a>
             <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="featured-properties.html">Buy</a></li>
-                <li><a href="rent.html">Rent</a></li>
-                <li><a href="investment.html">Investment</a></li>
-                <li><a href="new-projects.html">New Projects</a></li>
-                <li><a href="gallery-profile.html">Gallery</a></li>
-                <li><a class="active" aria-current="page" href="locations.html">Locations</a></li>
-                <li><a href="about.html">About Us</a></li>
+                <li><a href="index.html">Home</a></li><li><a href="featured-properties.html?region=delhi-ncr" class="active" aria-current="page">Delhi NCR</a></li><li><a href="featured-properties.html?region=uttarakhand">Uttarakhand</a></li>
             </ul>
-            <div class="nav-buttons"><a class="btn" href="contact.html">Contact</a><a class="btn btn-dark"
-                    href="list-property.html">List Property</a></div>
+            <div class="nav-buttons"><a href="contact.html" class="btn btn-dark">Enquire Now</a></div>
         </div>
     </header>
     <main>
         <section class="hero locations-hero">
-            <div class="container hero-copy"><span class="eyebrow">Delhi NCR location hub</span>
-                <h1>Find Properties by Location in Delhi NCR</h1>
-                <p>Explore residential, commercial, rental and new-project opportunities across Delhi NCR's key
-                    real-estate markets.</p>
+            <div class="container hero-copy brand-visual-intro">
+                <div class="brand-hero-copy"><span class="eyebrow">Delhi NCR &amp; Uttarakhand</span>
+                <h1>The right place<br>changes everything.</h1>
+                <p>From connected city neighbourhoods to a quieter life in the hills, get to know the places we cover.</p>
                 <form class="search-single" id="hero-location-search"><label class="full"><span class="eyebrow">Search a
                             market</span><input name="location" list="location-list"
                             placeholder="Search Gurgaon, Noida, Greater Noida..."
@@ -52,18 +46,19 @@
                         <option value="Noida">
                         <option value="Greater Noida">
                         <option value="Delhi">
-                    </datalist><button class="btn btn-gold">Explore Properties</button></form>
+                    </datalist><button class="btn btn-gold">Explore Properties</button></form></div>
+                <figure class="brand-hero-visual"><img src="image/home/delhi-ncr-skyline.jpg" alt="Modern illuminated skyline in Gurgaon, Delhi NCR" width="1000" height="900"><figcaption><small>City energy. Mountain calm.</small><span>Delhi NCR &amp; Uttarakhand</span></figcaption></figure>
             </div>
         </section>
         <section class="section" id="major-locations">
             <div class="container">
                 <div class="section-head">
                     <div><span class="eyebrow">Major markets</span>
-                        <h2>Explore Delhi NCR by Location</h2>
+                        <h2>Neighbourhoods for your next chapter.</h2>
                     </div>
                 </div>
                 <div class="location-feature" id="gurgaon"><img src="image/home-hero-luxury-evening-v2.png"
-                        alt="Residential skyline in Gurgaon">
+                        alt="Representative residential development imagery">
                     <div><span class="eyebrow">Gurgaon</span>
                         <h2>Corporate districts and diverse residential corridors</h2>
                         <p>Explore apartments, villas, rentals and commercial spaces across established and developing
@@ -86,12 +81,12 @@
                                 href="new-projects.html?location=Noida">New Projects</a><a class="btn btn-dark"
                                 href="noida-properties.html">Explore Noida</a></div>
                     </div><img
-                        src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=82"
-                        alt="Modern buildings in Noida" loading="lazy">
+                        src="image/home-hero-luxury-delhi-ncr.png"
+                        alt="Representative architectural imagery for the Noida property search" loading="lazy">
                 </div>
                 <div class="location-feature" id="greater-noida"><img
-                        src="https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?auto=format&fit=crop&w=1000&q=82"
-                        alt="Urban development in Greater Noida" loading="lazy">
+                        src="image/home/garden-villa.jpg"
+                        alt="Representative home inspiration for Greater Noida" loading="lazy">
                     <div><span class="eyebrow">Greater Noida</span>
                         <h2>Planned sectors and emerging residential catchments</h2>
                         <p>Explore apartments, plots and new communities across Greater Noida and its connected
@@ -114,8 +109,8 @@
                                 href="new-projects.html?location=Delhi%20NCR">New Projects</a><a class="btn btn-dark"
                                 href="delhi-properties.html">Explore Delhi</a></div>
                     </div><img
-                        src="https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1000&q=82"
-                        alt="Delhi architecture" loading="lazy">
+                        src="image/home/bright-interior.jpg"
+                        alt="Representative contemporary city home interior" loading="lazy">
                 </div>
             </div>
         </section>
@@ -296,7 +291,7 @@
                         <p>Tell us your preferred area, property type and budget.</p>
                     </div>
                     <div class="hero-actions"><button class="btn btn-gold" data-location-enquire>Get Expert
-                            Assistance</button><a class="btn" href="https://wa.me/919876543210" target="_blank"
+                            Assistance</button><a class="btn" href="https://wa.me/919012622994" target="_blank"
                             rel="noopener">WhatsApp Us</a></div>
                 </div>
             </div>
